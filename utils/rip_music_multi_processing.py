@@ -12,6 +12,7 @@ import multiprocessing
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 
 from collections import defaultdict
@@ -87,7 +88,7 @@ class RipMusic:
             self.show_help(error)
 
 
-    def rip(self, url=None, temp_dir=None):
+    def rip__(self, url=None, temp_dir=None):
         function_name = inspect.currentframe().f_code.co_name
         message = f'In {function_name}()\nurl: {url}\ntemp_dir: {temp_dir}'
         print(message)
@@ -190,6 +191,168 @@ class RipMusic:
         return url_name_dict
 
 
+    def get_ready(self, url_filename: tuple):
+        function_name = inspect.currentframe().f_code.co_name
+        url = url_filename[0]
+        filename = url_filename[1]
+        print(f'\n==-->>In {function_name}() - Proccess id: {os.getpid()}')
+        print(f'filename: {filename}, url: {url}')
+        #with multiprocessing.Pool() as m_pool:
+        #    result.append(m_pool.apply_async(self.rip, (url,)))
+            #result.append(m_pool.apply_async(self.rename_ripped_file, (filename,temp_dir)))
+        #    result.append(m_pool.apply_async(self.save_file, (filename,)))
+
+        #    for r in result:
+        #        r.wait()
+
+
+        if self.debug:
+            print(f'{"="*60}')
+            print(f'\nIn {function_name}():\nurl: {url}')
+            print(f'index: {index}, thread: {type(thread)}, filename: {filename}')
+            print(f'{"="*60}')
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            if self.debug:
+                print(f'temp_dir: {temp_dir}')
+
+            #thread[index] = {}
+            #rip = threading.Thread(target=self.rip, args=(url, temp_dir, result, index))
+            rip = threading.Thread(target=self.rip, args=(url, temp_dir))
+            #thread[index][0] = rip
+            rip.start()
+            rip.join()
+
+            #save_file = threading.Thread(target=self.save_file, args=(filename, temp_dir, result, index))
+            save_file = threading.Thread(target=self.save_file, args=(filename, temp_dir))
+            #thread[index][1] = save_file
+            save_file.start()
+            save_file.join()
+
+
+    #def rip(self, url: str, temp_dir: str, result: dict, index: int):
+    def rip(self, url: str, temp_dir: str):
+        """
+        To rip a music from youtube by using youtube-dl
+        :param url: The url of the music on youtube
+        :param temp_dir: a temporary subdirectory that store a ripped music
+        """
+        function_name = inspect.currentframe().f_code.co_name
+        message = f'In {function_name}():\nurl: {url}\ntemp_dir: {temp_dir}'
+        print(message)
+        if self.debug:
+            print(f'{"-"*40}')
+            print(message)
+            print(f'{"-"*40}')
+
+        cmd = RIP + f' -o "{temp_dir}/%(title)s.%(ext)s" --no-part ' + url
+        #subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout
+        #response = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        #try:
+        # TODO
+        # /home/cyan/mybin/rip_music_thread_in_thread.py:163:16: E0001: multiple exception types \
+        #        must be parenthesized (<unknown>, line 163) (syntax-error)
+        with subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as response:
+            # Store the return code in rc variable
+            return_code = response.wait()
+            if index not in result.keys():
+                result[index] = {}
+            result[index][0] = "Return Code: " + str(return_code)
+
+            # Separate the output and error by communicating with sp variable.
+            # This is similar to Tuple where we store two values to two different variables
+            out, err = response.communicate()
+            if self.debug > 1:
+                print(f'output is:\n{out}')
+            if err:
+                # Note:
+                # When run youtube-dl at the prompt, it'll complete gracefully
+                # e.g.
+                # $ youtube-dl -x --audio-quality 0 -f bestaudio --restrict-filenames \
+                #        --audio-format mp3 -o "/tmp/qq/%(title)s.%(ext)s" --no-part \
+                #        https://www.youtube.com/watch?v=RmTAUDlcPSk
+                # [youtube] RmTAUDlcPSk: Downloading webpage
+                # [download] Destination: /tmp/qq/Danny_Chan_-_Official_MV.webm
+                # [download] 100% of 3.25MiB in 00:47
+                # [ffmpeg] Destination: /tmp/qq/Danny_Chan_-_Official_MV.mp3
+                # Deleting original file /tmp/qq/Danny_Chan_-_Official_MV.webm (pass -k to keep)
+                #
+                # However, if run the same command through subprocess.Popen, it throws an warning:
+                # b'WARNING: Cannot update utime of file\nWARNING: Cannot update utime of audio file\n \
+                #    WARNING: Unable to remove downloaded original file\n'
+                print(f'error is:\n{err}')
+        #except subprocess.CalledProcessError, e:
+        #    print(f'rip music failed: {e.output}\nfrom URL:\n{url}\n')
+            assert return_code == 0, f"\nError!! Return Code is not ZERO: {return_code} {temp_dir}\nURL: {url}\n"
+
+        time.sleep(2)
+        # https://stackoverflow.com/questions/6893968/how-to-get-the-return-value-from-a-thread
+        # /home/cyan/practice/python/multi_thread_processing/03_thread_in_thread.py
+        #return return_code
+
+    # end of def rip(self, url=None, temp_dir=None):
+
+    #def save_file(self, filename: str, temp_dir: str, result: dict, index: int):
+    def save_file(self, filename: str, temp_dir: str):
+        """
+        To save a music ripped from youtube into a predefined subdirectory
+        :param filename: the music's filename
+        :param temp_dir: A temporary subdirectory to store a music put by method rip()
+        """
+        function_name = inspect.currentframe().f_code.co_name
+        message = f'In {function_name}():\nfilename: {filename}\ntemp_dir: {temp_dir}'
+        print(message)
+        if self.debug:
+            print(f'{"-"*40}')
+            print(message)
+            print(f'{"-"*40}')
+
+        mp3_file2look = f"{temp_dir}/*.mp3"
+        mp3_files = glob.glob(mp3_file2look)
+        j = 0
+        while len(mp3_files) != 1 and j < 150:
+            time.sleep(2)
+            mp3_files = glob.glob(mp3_file2look)
+            if len(mp3_files) != 1:
+                pass
+            else:
+                print(f'###===--->>>j = {j}, Length: {len(mp3_files)}, mp3_files: {mp3_files}')
+            j += 1
+        time.sleep(2)
+
+        try:
+            assert len(mp3_files) == 1
+            cmd = f"mv {mp3_files[0]} {filename}"
+            #if index not in result.keys():
+            #    result[index] = {}
+            #result[index][1] = "File Name: " + filename
+            os.system(cmd)
+            time.sleep(1)
+        except AssertionError:
+            print(f"Warning!! In {temp_dir}, mp3_files length: {len(mp3_files)} is NOT one!!")
+            return
+
+
+    #def summary(self, thread: dict, result: dict):
+    def summary(self):
+        """ Show summary"""
+#        if self.debug:
+#            for contents in [thread, result]:
+#                for i in sorted(contents.keys()):
+#                    for j in sorted(contents[i].keys()):
+#                        print(f'{i}, {j}, {contents[i][j]}')
+
+        mp3_file2look = f"{self.dest_dir}/*.mp3"
+        mp3_files = glob.glob(mp3_file2look)
+        if mp3_files:
+            mp3_files_count = len(mp3_files)
+            for i, filename in enumerate(mp3_files, start=1):
+                zeros = ""
+                if len(str(i)) < len(str(mp3_files_count)):
+                    zeros = "0"*(len(str(mp3_files_count)) - len(str(i)))
+                print(f'{zeros}{i}, {filename}')
+
+
 def main():
     start = time.time()
     function_name = inspect.currentframe().f_code.co_name
@@ -197,22 +360,19 @@ def main():
     obj.parse_command_line(sys.argv[1:])
     print(f'In {function_name}(), obj.srce: {obj.srce}')
     url_name = obj.prepare()
+
+    if len(url_name) == 0:
+        sys.exit(0)
+
     for url, filename in url_name.items():
-        temp_dir = tempfile.TemporaryDirectory()
         result = []
-        flag = True
         with multiprocessing.Pool() as mpool:
-            result.append(mpool.apply_async(obj.rip, (url,temp_dir)))
-            result.append(mpool.apply_async(obj.rename_ripped_file, (filename,temp_dir)))
+            result.append(mpool.apply_async(obj.get_ready, args=([url,filename],)))
 
             for r in result:
                 r.wait()
 
-        if flag:
-            temp_dir.cleanup()
-        else:
-            print(f'Manually check what is in "{temp_dir.name}"')
-        print(f'{"*"*60}')
+    obj.summary()
 
     print(f'Total run time: {round((time.time() - start), 3)}')
     sys.exit(0)
