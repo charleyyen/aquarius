@@ -21,7 +21,7 @@ from datetime import date
 from multiprocessing.pool import ThreadPool as Pool
 
 DEST = '/home/cyan/Music/dest/'
-#DEST = '/tmp/'
+DEST = '/tmp/'
 RIP = 'youtube-dl -x --audio-quality 0 -f bestaudio --restrict-filenames --audio-format mp3 '
 # When '-k' is used, the webm files is kept
 #RIP = 'youtube-dl -k -x --audio-quality 0 -f bestaudio --restrict-filenames --audio-format mp3 '
@@ -89,37 +89,6 @@ class RipMusic:
             self.show_help(error)
 
 
-    def get_ready(self, url_filename: tuple, thread: dict, result: dict, index: int):
-        """
-        To spawn two threads - one for ripping the music and the other watches the
-        music ripping thread to make sure the ripping is completed.
-        :param url_filename: contains the url of a music and the name of the music
-        """
-        function_name = inspect.currentframe().f_code.co_name
-        url = url_filename[0]
-        filename = url_filename[1]
-        if self.debug:
-            print(f'{"="*60}')
-            print(f'\nIn {function_name}():\nurl: {url}')
-            print(f'index: {index}, thread: {type(thread)}, filename: {filename}')
-            print(f'{"="*60}')
-
-        with tempfile.TemporaryDirectory() as temp_dir:
-            if self.debug:
-                print(f'temp_dir: {temp_dir}')
-
-            thread[index] = {}
-            rip = threading.Thread(target=self.rip, args=(url, temp_dir, result, index))
-            thread[index][0] = rip
-            rip.start()
-            rip.join()
-
-            save_file = threading.Thread(target=self.save_file, args=(filename, temp_dir, result, index))
-            thread[index][1] = save_file
-            save_file.start()
-            save_file.join()
-
-
     def rip(self, url: str, temp_dir: str, result: dict, index: int):
         """
         To rip a music from youtube by using youtube-dl
@@ -134,12 +103,6 @@ class RipMusic:
             print(f'{"-"*40}')
 
         cmd = RIP + f' -o "{temp_dir}/%(title)s.%(ext)s" --no-part ' + url
-        #subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout
-        #response = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        #try:
-        # TODO
-        # /home/cyan/mybin/rip_music_thread_in_thread.py:163:16: E0001: multiple exception types \
-        #        must be parenthesized (<unknown>, line 163) (syntax-error)
         with subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as response:
             # Store the return code in rc variable
             return_code = response.wait()
@@ -169,8 +132,6 @@ class RipMusic:
                 # b'WARNING: Cannot update utime of file\nWARNING: Cannot update utime of audio file\n \
                 #    WARNING: Unable to remove downloaded original file\n'
                 print(f'error is:\n{err}')
-        #except subprocess.CalledProcessError, e:
-        #    print(f'rip music failed: {e.output}\nfrom URL:\n{url}\n')
             assert return_code == 0, f"\nError!! Return Code is not ZERO: {return_code} {temp_dir}\nURL: {url}\n"
 
         time.sleep(2)
@@ -178,7 +139,6 @@ class RipMusic:
         # /home/cyan/practice/python/multi_thread_processing/03_thread_in_thread.py
         #return return_code
 
-    # end of def rip(self, url=None, temp_dir=None):
 
     def save_file(self, filename: str, temp_dir: str, result: dict, index: int):
         """
@@ -244,9 +204,9 @@ class RipMusic:
                     print(f'File exists: {name}')
                     continue
                 url_name_dict[url] = name
-            # end of for line in file_handle.readlines():
+
         return url_name_dict
-    # end of def prepare(self):
+
 
     def summary(self, thread: dict, result: dict):
         """ Show summary"""
@@ -267,6 +227,46 @@ class RipMusic:
                 print(f'{zeros}{i}, {filename}')
 
 
+    def get_ready(self, url_filename: tuple, base_info: tuple):
+        """
+        To spawn two threads - one for ripping the music and the other watches the
+        music ripping thread to make sure the ripping is completed.
+        :param url_filename: contains the url of a music and the name of the music
+        """
+        start = time.time()
+        function_name = inspect.currentframe().f_code.co_name
+        url = url_filename[0]
+        filename = url_filename[1]
+        thread = base_info[0]
+        result = base_info[1]
+        duration = base_info[2]
+        index = base_info[3]
+        if self.debug:
+            print(f'\n{"="*60}')
+            print(f'In {function_name}()')
+            print(f'index: {index}, thread: {type(thread)}, filename: {filename}, url: {url}')
+            print(f'{"="*60}')
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            if self.debug:
+                print(f'temp_dir: {temp_dir}')
+
+            thread[index] = {}
+            rip = threading.Thread(target=self.rip, args=(url, temp_dir, result, index))
+            thread[index][0] = rip
+            rip.start()
+            rip.join()
+
+            save_file = threading.Thread(target=self.save_file, args=(filename, temp_dir, result, index))
+            thread[index][1] = save_file
+            save_file.start()
+            save_file.join()
+
+        print(f'In {function_name}()')
+        print(f'Total run time: {round((time.time() - start), 3)}')
+        duration[index] = round((time.time() - start), 3)
+
+
 def main():
     """
     Main method - spawns mutilple threads to rip music concurrently
@@ -275,7 +275,7 @@ def main():
     function_name = inspect.currentframe().f_code.co_name
     obj = RipMusic()
     obj.parse_command_line(sys.argv[1:])
-    print(f'\nIn {function_name}(), obj.srce: {obj.srce}')
+    print(f'In {function_name}(), obj.srce: {obj.srce}')
     url_name = obj.prepare()
 
     if len(url_name) == 0:
@@ -283,13 +283,13 @@ def main():
 
     thread = defaultdict(dict)
     result = defaultdict(dict)
+    duration = {}
     # Ref: https://stackoverflow.com/questions/15143837/how-to-multi-thread-an-operation-within-a-loop-in-python
     # Also in OneNote
     pool = Pool(len(url_name))
     index = 1
     for url, filename in url_name.items():
-        #pool.apply_async(obj.get_ready, args=([url, filename], thread, index))
-        pool.apply_async(obj.get_ready, args=([url, filename], thread, result, index))
+        pool.apply_async(obj.get_ready, args=([url, filename], [thread,result,duration,index]))
         index += 1
 
     pool.close()
@@ -297,7 +297,7 @@ def main():
 
     obj.summary(thread, result)
 
-    print(f'\nTotal run time: {round((time.time() - start), 3)}\n')
+    print(f'Total run time: {round((time.time() - start), 3)}, Sum: {round(sum(duration.values()), 3)}')
     sys.exit(0)
 
 if __name__ == "__main__":
