@@ -54,6 +54,7 @@ Write an efficient algorithm for the following assumptions:
 Copyright 2009–2022 by Codility Limited. All Rights Reserved. Unauthorized copying, publication or disclosure
 prohibited.
 """
+import pytest
 import random
 from parameterized import parameterized
 
@@ -123,5 +124,25 @@ class TestFrogRiverOne:
     @parameterized.expand(generate_test_data())
     def test_solution(self, data, expected):
         """Test solution()"""
-        print(f'Data Type: {type(data)}, Data: #{data}#, expected: #{expected}#')
+        #print(f'Data Type: {type(data)}, Data: #{data}#, expected: #{expected}#')
         assert solution(data[0], data[1]) == expected
+
+
+#==========================================
+# Retest using parameterized pytest.fixture
+#==========================================
+list_ = [
+    ((5, [1,5,1,4,3,2,3,5]), 5),
+    ((3, [3, 3, 1, 1, 4]), -1),
+    ((3, [3, 3, 3, 1, 1, 2]), 5),
+    ]
+
+@pytest.fixture(params=list_)
+def get_a_list(request):
+    """ Fixture as a data store to share information between steps"""
+    return request.param
+
+def test_solution_using_fixture(get_a_list):
+    #print(f"test_solution_using_fixture(), X: #{get_a_list[0][0]}#, Arr: #{get_a_list[0][1]}#, Expected: #{get_a_list[1]}#")
+    assert solution(get_a_list[0][0], get_a_list[0][1]) == get_a_list[1]
+
