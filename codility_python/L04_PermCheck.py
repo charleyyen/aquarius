@@ -50,6 +50,8 @@ Write an efficient algorithm for the following assumptions:
 Copyright 2009–2022 by Codility Limited. All Rights Reserved.
 Unauthorized copying, publication or disclosure prohibited.
 """
+import pytest
+
 def solution_1_75_83_66(A):
     # Task Score 75%, Correctness 83%, Performance 66%
     if 1 not in A:
@@ -96,10 +98,22 @@ def solution(A):
         return 0
     return 1
 
-if __name__ == '__main__':
-    arr = [1,2,5,3,4]
-    arr = [1,4,3]
-    arr = [0,3]
-    arr = [1,1]
-    print(solution(arr))
+#=======================================
+# test with parameterized pytest.fixture
+#=======================================
+test_data = [
+    ([], 0),
+    ([0,1,2], 0),
+    ([1,2,3,2], 0),
+    ([1,2,3,5], 0),
+    ([1,2,3,4,5], 1),
+    ]
+
+@pytest.fixture(params=test_data)
+def get_test_data(request):
+    """ Fixture as a data store to share information between steps"""
+    return request.param
+
+def test_solution_using_fixture(get_test_data):
+    assert solution(get_test_data[0]) == get_test_data[1]
 
