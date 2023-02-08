@@ -23,8 +23,8 @@ Write an efficient algorithm for the following assumptions:
 Copyright 2009–2022 by Codility Limited. All Rights Reserved.
 Unauthorized copying, publication or disclosure prohibited.
 """
-#import unittest
 import random
+from parameterized import parameterized
 
 def solution_1_77_100_50(A):
     # Task Score 77% Correctness 100% Performance 50%
@@ -87,3 +87,75 @@ def solution_2_88_100_75(A):
 
     return A[-1]+1
 
+
+def solution(A):
+    # Scored 100%
+    if 1 not in A:
+        return 1
+
+    A = sorted(list(set(A)))
+    index = A.index(1)
+    A = A[index:] # all positives and sorted array
+    if len(A) == 1:
+        # A has one element - 1 (one)
+        return 2
+    if len(A) == A[-1]:
+        return A[-1]+1
+
+    return more_search(A)
+
+def more_search(A):
+    half_position = len(A)//2
+    left = A[:half_position]
+    right = A[half_position:]
+    if len(left) == left[-1] - left[0] + 1:
+        if left[-1] + 1 < right[0]:
+            return left[-1] + 1
+        return more_search(right)
+    return more_search(left)
+
+###########################################
+def generate_test_data():
+    test_data = [
+        ([1, 3, 6, 4, 1, 2], 5),
+        ([1, 2, 3], 4),
+        ([-1, -3], 1),
+        ([-1,-3, 1, 3, 5, 4, 1, 2, 8], 6),
+        ([-1,-3, 3, 5, 4, 2, 8], 1),
+        ([1], 2),
+        ([1,2,3,4,5,6,7,8,9], 10),
+        ]
+
+    #N is an integer within the range [1..100,000];
+    #each element of array A is an integer within the range [−1,000,000..1,000,000].
+    N = 100000
+    x = random.randint(1, N)
+    arr = list(range(-x, x))
+    number_to_be_removed = random.randint(1, len(arr)//2)
+    print(f'x: {x}, length: {len(arr)}, number_to_be_removed: {number_to_be_removed}')
+    i = 0
+    removed_items = []
+    while i < number_to_be_removed:
+        position = random.randint(2, len(arr)//2 - 1)
+        del arr[position]
+        removed_items.append(arr[position])
+        i += 1
+
+    random.shuffle(arr)
+    removed_items.append(0)
+    removed_items = sorted(removed_items)
+    index = removed_items.index(0)
+    a = sorted(list(set(removed_items[index:])))
+    minimum = a[1]
+    print(f'length: {len(arr)}, {arr[:10]}, {len(removed_items)}')
+    print(f'index: {index}, {a[:10]}, minimum: {minimum}')
+#    test_data.append((arr, minimum))
+
+
+    for element in test_data:
+        yield element[0], element[1]
+
+@parameterized.expand(generate_test_data())
+def test_solution(data, expected):
+    """Test solution()"""
+    assert solution(data) == expected
