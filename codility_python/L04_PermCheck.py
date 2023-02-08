@@ -94,7 +94,11 @@ def solution(A):
         return 0
 
     arr = list(range(1, len(A)+1))
-    if len(arr) != len(A) or sum(arr) != sum(A):
+    # When A = [1,2,3,5], len(A) = 4. Then len(arr) = 4.
+    # So we cannot simply do somthing like --
+    # if len(arr) != len(A):
+    #     return 0
+    if sum(arr) != sum(A):
         return 0
     return 1
 
@@ -102,10 +106,10 @@ def solution(A):
 # test with parameterized pytest.fixture
 #=======================================
 test_data = [
-    ([], 0),
-    ([0,1,2], 0),
-    ([1,2,3,2], 0),
-    ([1,2,3,5], 0),
+    ([], 0),           # fail at if 1 not in A
+    ([0,1,2], 0),      # fail at if 0 in A
+    ([1,2,3,2], 0),    # fail at if len(A) != len(set(A))
+    ([1,2,3,5], 0),    # fail at if sum(arr) != sum(A)
     ([1,2,3,4,5], 1),
     ]
 
