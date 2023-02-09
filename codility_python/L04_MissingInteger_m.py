@@ -89,6 +89,7 @@ def solution_2_88_100_75(A):
     return A[-1]+1
 
 def solution_simple(A):
+    # Scored 100%. The best!!
     A = sorted(A)
     missing = 1
     for i in A:
@@ -98,8 +99,8 @@ def solution_simple(A):
             break
     return missing
 
-def solution(A):
-    # Scored 100%
+def solution_binary(A):
+    # Scored 100%. A little too complicated.
     if 1 not in A:
         return 1
 
@@ -151,27 +152,6 @@ def generate_test_data():
     arr.remove(missing)
     print(f'2. x: {x}, length: {len(arr)}, 2nd last: {arr[-2]}')
     test_data.append((arr, missing))
-    """
-    number_to_be_removed = random.randint(1, len(arr)//2)
-    print(f'x: {x}, length: {len(arr)}, number_to_be_removed: {number_to_be_removed}')
-    i = 0
-    removed_items = []
-    while i < number_to_be_removed:
-        position = random.randint(2, len(arr)//2 - 1)
-        del arr[position]
-        removed_items.append(arr[position])
-        i += 1
-
-    random.shuffle(arr)
-    removed_items.append(0)
-    removed_items = sorted(removed_items)
-    index = removed_items.index(0)
-    a = sorted(list(set(removed_items[index:])))
-    minimum = a[1]
-    print(f'length: {len(arr)}, {arr[:10]}, {len(removed_items)}')
-    print(f'index: {index}, {a[:10]}, minimum: {minimum}')
-#    test_data.append((arr, minimum))
-    """
     number_to_be_removed = random.randint(1, len(arr)//2)
 
 
@@ -182,12 +162,15 @@ def generate_test_data():
 def test_solution_simple(data, expected):
     """Test solution()"""
     start = time.time()
-    assert solution_simple(data) == expected
+    solution = solution_simple
+    #assert solution_simple(data) == expected
+    assert solution(data) == expected
     print(f'test_solution_simple(): Total run time: {round((time.time() - start), 3)}')
 
 @parameterized.expand(generate_test_data())
 def test_solution(data, expected):
     """Test solution()"""
     start = time.time()
+    solution = solution_binary
     assert solution(data) == expected
     print(f'test_solution(): Total run time: {round((time.time() - start), 3)}')
