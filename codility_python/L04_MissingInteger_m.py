@@ -24,6 +24,7 @@ Copyright 2009–2022 by Codility Limited. All Rights Reserved.
 Unauthorized copying, publication or disclosure prohibited.
 """
 import random
+import time
 from parameterized import parameterized
 
 def solution_1_77_100_50(A):
@@ -87,6 +88,15 @@ def solution_2_88_100_75(A):
 
     return A[-1]+1
 
+def solution_simple(A):
+    A = sorted(A)
+    missing = 1
+    for i in A:
+        if i == missing:
+            missing += 1
+        elif i > missing:
+            break
+    return missing
 
 def solution(A):
     # Scored 100%
@@ -130,7 +140,18 @@ def generate_test_data():
     #each element of array A is an integer within the range [−1,000,000..1,000,000].
     N = 100000
     x = random.randint(1, N)
+    x = N
     arr = list(range(-x, x))
+    if len(arr) > N:
+        start = len(arr) - N
+        arr = arr[start:]
+
+    #print(f'1. x: {x}, length: {len(arr)}, 2nd last: {arr[-2]}')
+    missing = arr[-2]
+    arr.remove(missing)
+    print(f'2. x: {x}, length: {len(arr)}, 2nd last: {arr[-2]}')
+    test_data.append((arr, missing))
+    """
     number_to_be_removed = random.randint(1, len(arr)//2)
     print(f'x: {x}, length: {len(arr)}, number_to_be_removed: {number_to_be_removed}')
     i = 0
@@ -150,12 +171,23 @@ def generate_test_data():
     print(f'length: {len(arr)}, {arr[:10]}, {len(removed_items)}')
     print(f'index: {index}, {a[:10]}, minimum: {minimum}')
 #    test_data.append((arr, minimum))
+    """
+    number_to_be_removed = random.randint(1, len(arr)//2)
 
 
     for element in test_data:
         yield element[0], element[1]
 
 @parameterized.expand(generate_test_data())
+def test_solution_simple(data, expected):
+    """Test solution()"""
+    start = time.time()
+    assert solution_simple(data) == expected
+    print(f'test_solution_simple(): Total run time: {round((time.time() - start), 3)}')
+
+@parameterized.expand(generate_test_data())
 def test_solution(data, expected):
     """Test solution()"""
+    start = time.time()
     assert solution(data) == expected
+    print(f'test_solution(): Total run time: {round((time.time() - start), 3)}')
