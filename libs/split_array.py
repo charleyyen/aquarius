@@ -1,25 +1,15 @@
 def split_list_by_value_1(value, data_list):
-    print(f'To split "{data_list}" by the delimiter "{value}":')
-    indices = [i for i, x in enumerate(data) if x == 6]
-    #print(f'indices: {indices}, data_list: {data_list}')
+    indices = [i for i, x in enumerate(data_list) if x == value]
 
     blocks = []
     i = 0
     for e in indices:
-        blocks.append(data[i:e])
-        #print(f'block: {data[i:e]}')
+        blocks.append(data_list[i:e])
         i = e + 1
 
-    blocks.append(data[i:])
-    return blocks
+    blocks.append(data_list[i:])
+    return blocks, indices
 
-
-def split_list_by_value_2(value, data_list):
-    arr = [0]*(N)
-    print(f'{arr}, {A}')
-    blocks = split(A, N+1)
-    for block in blocks:
-        print(f'block: {block}')
 
 def split_list_by_value_2(value, data_list):
     chunk = []
@@ -31,15 +21,17 @@ def split_list_by_value_2(value, data_list):
             chunk.append(val)
     yield chunk
 
-data = [3,4,4,6,1,1,2,2,2,3,6,3,3,3,3,3,6,1,4,4]
-item = 6
-blocks = split_list_by_value_1(item, data)
-for block in blocks:
-    print(f'block: {block}')
+if __name__ == '__main__':
+    data = [3,4,4,6,1,1,2,2,2,3,6,3,3,3,3,3,6,1,4,4]
+    item = 6
+    blocks1, indices = split_list_by_value_1(item, data)
+    for block in blocks1:
+        print(f'1. block: {block}')
 
-print()
+    print()
 
-blocks = split_list_by_value_2(item, data)
-for block in blocks:
-    print(f'block: {block}')
+    blocks2 = split_list_by_value_2(item, data)
+    for block in blocks2:
+        print(f'2. block: {block}')
 
+    #assert blocks1 == blocks2

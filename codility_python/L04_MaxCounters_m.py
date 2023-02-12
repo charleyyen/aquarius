@@ -68,6 +68,8 @@ Unauthorized copying, publication or disclosure prohibited.
 import random
 import time
 
+from aquarius.libs import split_array
+
 def solution_1_77_100_60(N, A):
     # Task Score 77% Correctness 100% Performance 60%
     arr = [0]*(N+1)
@@ -207,20 +209,79 @@ def test_performance(arr_length, integer_count, random_number):
 
     return arr
 
+def show_data_info(blocks, message, sorted_array=False):
+    line = f"{'-'*10}"
+    message = line + message + line
+    print(message)
+    if sorted_array:
+        if len(blocks) < 20:
+            print(blocks)
+        else:
+            print(f' Left 10: {blocks[:10]}')
+            print(f'Right 10: {blocks[10:]}')
+    else:
+        print(f'length: {len(blocks)}\nblocks[0] length: {len(blocks[0])}\nblocks[-1] length: {len(blocks[-1])}\n')
+        if len(blocks[0]) > 10:
+            print(f'blocks[0][:10]: {blocks[0][:10]}')
+        else:
+            if len(blocks[0]) == 0:
+                if len(blocks[1]) > 10:
+                    print(f'blocks[1][:10]: {blocks[1][:10]}')
+                else:
+                    print(f'blocks[1]: {blocks[1]}')
+            else:
+                print(f'blocks[0]: {blocks[0]}')
+
+        if len(blocks[-1]) > 10:
+            print(f'blocks[-1][:10]: {blocks[-1][:10]}')
+        else:
+            if len(blocks[-1]) == 0:
+                if len(blocks[-2]) > 10:
+                    print(f'blocks[-2][:10]: {blocks[-2][:10]}')
+                else:
+                    print(f'blocks[-2]: {blocks[-2]}')
+            else:
+                print(f'blocks[-1]: {blocks[-1]}')
+    print(f"{'-'*len(message)}")
+
+
 if __name__ == '__main__':
     arr_length = integer_count = 100000
     random_number = random.randint(1, integer_count/10)
-#    arr_length = integer_count = 20
-#    random_number = random.randint(1, integer_count-1)
     data = test_performance(arr_length, integer_count, random_number)
+
+    print()
+
+    blocks_1, indices = split_array.split_list_by_value_1(arr_length+1, data)
+    print(f'indices[0] = {indices[0]}, indices[-1]: {indices[-1]}')
+    message = "blocks from split_list_by_value_1"
+    show_data_info(blocks_1, message)
+
+    blocks_generated = split_array.split_list_by_value_2(arr_length+1, data)
+    message = "blocks from split_list_by_value_2"
+    blocks_2 = []
+    for block in blocks_generated:
+        blocks_2.append(block)
+    show_data_info(blocks_2, message)
+
+    assert len(blocks_1) == len(blocks_2)
+
+    print()
     print()
 
     start = time.time()
     new_arr = solution_1_77_100_60(arr_length, data)
-    print(f'A. Total run time: {round((time.time() - start), 3)}')
+    print(f'A. Total run time (solution_1()): {round((time.time() - start), 3)}')
     print(f'A. length: {len(new_arr)}\n{new_arr[:10]}\n{new_arr[-10:]}\n')
+    new_arr_1 = sorted(list(set(new_arr)))
+    message = f"{'-'*10}" + "Unique Elements returned by solution_1()" + f"{'-'*10}"
+    show_data_info(new_arr_1, message, sorted_array=True)
 
     start = time.time()
     new_arr = solution(arr_length, data)
-    print(f'B. Total run time: {round((time.time() - start), 3)}')
+    print(f'B. Total run time (solution_2()): {round((time.time() - start), 3)}')
     print(f'B. length: {len(new_arr)}\n{new_arr[:10]}\n{new_arr[-10:]}\n')
+    new_arr_2 = sorted(list(set(new_arr)))
+    message = f"{'-'*10}" + "Unique Elements returned by solution_2()" + f"{'-'*10}"
+    show_data_info(new_arr_1, message, sorted_array=True)
+    print()
