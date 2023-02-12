@@ -65,6 +65,9 @@ Copyright 2009–2022 by Codility Limited. All Rights Reserved.
 Unauthorized copying, publication or disclosure prohibited.
 
 """
+import random
+import time
+
 def solution_1_77_100_60(N, A):
     # Task Score 77% Correctness 100% Performance 60%
     arr = [0]*(N+1)
@@ -179,11 +182,45 @@ def solution(N, A):
     return arr
 
 
-data = [1, 3, 6, 4, 1, 2]
-data = [3, 4, 6, 4, 6, 1, 4, 4]
-data = [6,3,4,4,6,1,1,6,2,2,2,6,3,3,3,3,3,3,6,1,4,4,6]
-data = [3, 4, 4, 6, 1, 1, 2, 2, 2, 3, 6, 5, 3, 3, 3, 3, 3, 6, 1, 4, 4]
-print(solution_1_77_100_60(5, data))
-print()
-print(solution(5, data))
-#print(solution(2, [1, 1, 3, 2, 2]))
+#data = [1, 3, 6, 4, 1, 2]
+#data = [3, 4, 4, 6, 1, 4, 4]
+#data = [6,3,4,4,6,1,1,6,2,2,2,6,3,3,3,3,3,3,6,1,4,4,6]
+#data = [3, 4, 4, 6, 1, 1, 2, 2, 2, 3, 6, 5, 3, 3, 3, 3, 3, 6, 1, 4, 4]
+def test_performance(arr_length, integer_count, random_number):
+    #N and M are integers within the range [1..100,000];
+    #each element of array A is an integer within the range [1..N + 1].
+    arr = [random.randint(1, integer_count-1) for _ in range(arr_length)]
+    print(f'A. arr length: {len(arr)}, random_number: {random_number}')
+    for i in range(random_number):
+        arr.append(arr_length+1)
+    print(f'B. arr length: {len(arr)}, random_number: {random_number}')
+    random.shuffle(arr)
+    #arr = arr[:arr_length]
+    print(f'C. arr length: {len(arr)}, random_number: {random_number}')
+    
+    print(f'arr[:10]: {len(arr[:10])}, arr[:10]: {arr[:10]}')
+    print(f'arr[-10:]: {len(arr[-10:])}, arr[-10:]: {arr[-10:]}')
+    if arr_length+1 in arr:
+        print(f'arr.count({arr_length+1}): {arr.count(arr_length+1)}')
+    else:
+        print(f'{arr_length} is not in arr whose length is {len(arr)}')
+
+    return arr
+
+if __name__ == '__main__':
+    arr_length = integer_count = 100000
+    random_number = random.randint(1, integer_count/10)
+#    arr_length = integer_count = 20
+#    random_number = random.randint(1, integer_count-1)
+    data = test_performance(arr_length, integer_count, random_number)
+    print()
+
+    start = time.time()
+    new_arr = solution_1_77_100_60(arr_length, data)
+    print(f'A. Total run time: {round((time.time() - start), 3)}')
+    print(f'A. length: {len(new_arr)}\n{new_arr[:10]}\n{new_arr[-10:]}\n')
+
+    start = time.time()
+    new_arr = solution(arr_length, data)
+    print(f'B. Total run time: {round((time.time() - start), 3)}')
+    print(f'B. length: {len(new_arr)}\n{new_arr[:10]}\n{new_arr[-10:]}\n')
