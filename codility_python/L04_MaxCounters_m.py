@@ -184,21 +184,6 @@ def solution(N, A):
     return arr
 
 
-def test_performance(arr_length, integer_count, random_number):
-    arr = [random.randint(1, integer_count-1) for _ in range(arr_length)]
-    for i in range(random_number):
-        arr.append(arr_length+1)
-    random.shuffle(arr)
-    
-    #print(f'arr[:10]: {len(arr[:10])}, arr[:10]: {arr[:10]}')
-    #print(f'arr[-10:]: {len(arr[-10:])}, arr[-10:]: {arr[-10:]}')
-    #if arr_length+1 in arr:
-    #    print(f'arr.count({arr_length+1}): {arr.count(arr_length+1)}')
-    #else:
-    #    print(f'{arr_length} is not in arr whose length is {len(arr)}')
-
-    return arr
-
 def show_data_info(blocks, message, sorted_array=False):
     line = f"{'-'*10}"
     message = line + message + line
@@ -232,7 +217,39 @@ def show_data_info(blocks, message, sorted_array=False):
                     print(f'blocks[-2]: {blocks[-2]}')
             else:
                 print(f'blocks[-1]: {blocks[-1]}')
-    print(f"{'-'*len(message)}")
+    print(f"{'-'*len(message)}\n")
+
+
+def main():
+    #--------------------------------------
+    # N and M are integers within the range [1..100,000];
+    # each element of array A is an integer within the range [1..N + 1].
+    N = M = 100000
+    data = split_array.create_random_array(high=M, size=M)
+    random_number_index = random.randint(1, len(data))
+    random_number = int(data[random_number_index]//(N/1000))
+    for i in range(random_number):
+        data.append(N+1)
+    random.shuffle(data)
+    # print(f'random_number: {random_number}, N: {N}, data length: {len(data)}')
+
+    print()
+
+    start = time.time()
+    new_arr = solution_1_77_100_60(N, data)
+    print(f'A. Total run time (solution_1()): {round((time.time() - start), 3)}')
+    #print(f'A. length: {len(new_arr)}\n{new_arr[:10]}\n{new_arr[-10:]}\n')
+    new_arr_1 = sorted(list(set(new_arr)))
+    message = f"{'-'*10} Unique Elements returned by solution_1() (Original Length: {len(new_arr)}) {'-'*10}"
+    show_data_info(new_arr_1, message, sorted_array=True)
+
+    start = time.time()
+    new_arr = solution(N, data)
+    print(f'B. Total run time (solution_2()): {round((time.time() - start), 3)}')
+    #print(f'B. length: {len(new_arr)}\n{new_arr[:10]}\n{new_arr[-10:]}\n')
+    new_arr_2 = sorted(list(set(new_arr)))
+    message = f"{'-'*10} Unique Elements returned by solution_2() (Original Length: {len(new_arr)}) {'-'*10}"
+    show_data_info(new_arr_1, message, sorted_array=True)
 
 
 if __name__ == '__main__':
@@ -241,44 +258,5 @@ if __name__ == '__main__':
     print(f'Solution 1: {result}')
     result = solution(6, data)
     print(f'Solution 1: {result}')
-    #--------------------------------------
-    arr_length = integer_count = 100000
-    arr_length = integer_count = 100000
-    random_number = random.randint(1, integer_count/10)
-    data = test_performance(arr_length, integer_count, random_number)
-
     print()
-
-    blocks_1, indices = split_array.split_list_by_value_1(arr_length+1, data)
-    print(f'indices[0] = {indices[0]}, indices[-1]: {indices[-1]}')
-    message = "blocks from split_list_by_value_1"
-    show_data_info(blocks_1, message)
-
-    blocks_generated = split_array.split_list_by_value_2(arr_length+1, data)
-    message = "blocks from split_list_by_value_2"
-    blocks_2 = []
-    for block in blocks_generated:
-        blocks_2.append(block)
-    show_data_info(blocks_2, message)
-
-    assert len(blocks_1) == len(blocks_2)
-
-    print()
-    print()
-
-    start = time.time()
-    new_arr = solution_1_77_100_60(arr_length, data)
-    print(f'A. Total run time (solution_1()): {round((time.time() - start), 3)}')
-    #print(f'A. length: {len(new_arr)}\n{new_arr[:10]}\n{new_arr[-10:]}\n')
-    new_arr_1 = sorted(list(set(new_arr)))
-    message = f"{'-'*10}" + "Unique Elements returned by solution_1()" + f"{'-'*10}"
-    show_data_info(new_arr_1, message, sorted_array=True)
-
-    start = time.time()
-    new_arr = solution(arr_length, data)
-    print(f'B. Total run time (solution_2()): {round((time.time() - start), 3)}')
-    #print(f'B. length: {len(new_arr)}\n{new_arr[:10]}\n{new_arr[-10:]}\n')
-    new_arr_2 = sorted(list(set(new_arr)))
-    message = f"{'-'*10}" + "Unique Elements returned by solution_2()" + f"{'-'*10}"
-    show_data_info(new_arr_1, message, sorted_array=True)
-    print()
+    main()
