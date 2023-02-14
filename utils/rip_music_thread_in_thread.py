@@ -238,7 +238,11 @@ class RipMusic:
                     continue
                 url_name = line.split()
                 url = url_name[0]
-                name = self.dest_dir + '/' + url_name[1] + '.mp3'
+                if self.file_format == 'mp3':
+                    name = self.dest_dir + '/' + url_name[1] + '.mp3'
+                elif self.file_format == 'mp4':
+                    name = self.dest_dir + '/' + url_name[1] + '.mp4'
+
                 if os.path.isfile(name):
                     print(f'File exists: {name}')
                     continue
