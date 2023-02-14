@@ -20,6 +20,7 @@ from collections import defaultdict
 from datetime import date
 from multiprocessing.pool import ThreadPool as Pool
 
+FILEFORMAT = ['mp3', 'mp4']
 DEST = '/home/cyan/Music/dest/'
 DEST = '/tmp/'
 RIP = 'youtube-dl -x --audio-quality 0 -f bestaudio --restrict-filenames --audio-format mp3 '
@@ -30,6 +31,7 @@ class RipMusic:
     """A class designed to rip music from YouTube"""
     def __init__(self):
         self.debug = 0
+        self.file_format = 'mp3'
         self.srce = None
         self.dest_dir = DEST + date.today().strftime('%Y_%m_%d')
         if not os.path.exists(self.dest_dir):
@@ -47,8 +49,9 @@ class RipMusic:
     @staticmethod
     def show_help(message=''):
         """Show cmdline interface"""
-        message = f'{message}\n {sys.argv[0]} -s <source file>'
-        message += '\n<url> <name>'
+        message = f'{message}\n {sys.argv[0]} -s <source file> [-d <debug level>] [-f <file format>]'
+        message += f'\nAcceptable file formats: {FILEFORMAT}'
+        #message += '\n<url> <name>'
         print(message)
         sys.exit(2)
 
@@ -64,7 +67,7 @@ class RipMusic:
             print(message)
 
         try:
-            opts, args = getopt.getopt(argv, "hs:a", ["source_file="])
+            opts, args = getopt.getopt(argv, "hs:d:f:", ["source_file="])
         except getopt.GetoptError:
             error = "cmdline opt error"
             self.show_help(error)
@@ -79,8 +82,25 @@ class RipMusic:
                 if opt == '-h':
                     message = "Showing the correct cmdline usge"
                     self.show_help()
+                elif opt == '-d':
+                    try:
+                        if isinstance(int(arg), int):
+                            self.debug = int(arg)
+                            print(f'debug level: {self.debug}')
+                    except ValueError as e:
+                        error = f"{e}\nSpecify a debug level: {str(argv)}"
+                        self.show_help(error)
                 elif opt in ("-s", "--source_file"):
-                    self.srce = arg
+                    if os.path.isfile(arg):
+                        self.srce = arg
+                    else:
+                        error = f"Source file '{arg}' does not exist: {str(argv)}"
+                        self.show_help(error)
+                elif opt == '-f':
+                    if arg not in FILEFORMAT:
+                        error = f"Illegal file format '{arg}' given at the cmdline: {str(argv)}"
+                        self.show_help(error)
+                    self.file_format = arg
                 else:
                     error = "cmdline opt error" + str(argv)
                     self.show_help(error)
@@ -275,7 +295,8 @@ def main():
     function_name = inspect.currentframe().f_code.co_name
     obj = RipMusic()
     obj.parse_command_line(sys.argv[1:])
-    print(f'In {function_name}(), obj.srce: {obj.srce}')
+    print(f'In {function_name}(), obj.srce: {obj.srce}, File Format: {obj.file_format}')
+    """
     url_name = obj.prepare()
 
     if len(url_name) == 0:
@@ -298,6 +319,7 @@ def main():
     obj.summary(thread, result)
 
     print(f'Total run time: {round((time.time() - start), 3)}, Sum: {round(sum(duration.values()), 3)}')
+    """
     sys.exit(0)
 
 if __name__ == "__main__":
