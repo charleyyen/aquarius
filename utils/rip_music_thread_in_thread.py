@@ -24,6 +24,11 @@ FILEFORMAT = ['mp3', 'mp4']
 DEST = '/home/cyan/Music/dest/'
 DEST = '/tmp/'
 RIP = 'youtube-dl -x --audio-quality 0 -f bestaudio --restrict-filenames --audio-format mp3 '
+RIPV = 'youtube-dl --recode-video mp4'
+FORMAT_RIP = {
+    'mp3': RIP,
+    'mp4': RIPV
+}
 # When '-k' is used, the webm files is kept
 #RIP = 'youtube-dl -k -x --audio-quality 0 -f bestaudio --restrict-filenames --audio-format mp3 '
 
@@ -32,6 +37,7 @@ class RipMusic:
     def __init__(self):
         self.debug = 0
         self.file_format = 'mp3'
+        self.rip_command = RIP
         self.srce = None
         self.dest_dir = DEST + date.today().strftime('%Y_%m_%d')
         if not os.path.exists(self.dest_dir):
@@ -101,6 +107,7 @@ class RipMusic:
                         error = f"Illegal file format '{arg}' given at the cmdline: {str(argv)}"
                         self.show_help(error)
                     self.file_format = arg
+                    self.rip_command = RIPV
                 else:
                     error = "cmdline opt error" + str(argv)
                     self.show_help(error)
@@ -122,7 +129,9 @@ class RipMusic:
             print(message)
             print(f'{"-"*40}')
 
-        cmd = RIP + f' -o "{temp_dir}/%(title)s.%(ext)s" --no-part ' + url
+        #cmd = RIP + f' -o "{temp_dir}/%(title)s.%(ext)s" --no-part ' + url
+        cmd = self.rip_command + f' -o "{temp_dir}/%(title)s.%(ext)s" --no-part ' + url
+        print(f"\n\nCMD:\n{cmd}\n\n")
         with subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as response:
             # Store the return code in rc variable
             return_code = response.wait()
@@ -173,29 +182,39 @@ class RipMusic:
             print(message)
             print(f'{"-"*40}')
 
-        mp3_file2look = f"{temp_dir}/*.mp3"
-        mp3_files = glob.glob(mp3_file2look)
+        if self.file_format == 'mp3':
+            mp_file2look = f"{temp_dir}/*.mp3"
+            # wait_time * sleep_time = 300 sec = 5 min
+            wait_time = 150
+            sleep_time = 2
+        elif self.file_format == 'mp4':
+            mp_file2look = f"{temp_dir}/*.mp4"
+            # wait_time * sleep_time = 1800 sec = 30 min
+            wait_time = 180
+            sleep_time = 10
+
+        mp_files = glob.glob(mp_file2look)
         j = 0
-        while len(mp3_files) != 1 and j < 150:
+        while len(mp_files) != 1 and j < 150:
             time.sleep(2)
-            mp3_files = glob.glob(mp3_file2look)
-            if len(mp3_files) != 1:
+            mp_files = glob.glob(mp_file2look)
+            if len(mp_files) != 1:
                 pass
             else:
-                print(f'###===--->>>j = {j}, Length: {len(mp3_files)}, mp3_files: {mp3_files}')
+                print(f'###===--->>>j = {j}, Length: {len(mp_files)}, mp_files: {mp_files}')
             j += 1
         time.sleep(2)
 
         try:
-            assert len(mp3_files) == 1
-            cmd = f"mv {mp3_files[0]} {filename}"
+            assert len(mp_files) == 1
+            cmd = f"mv {mp_files[0]} {filename}"
             if index not in result.keys():
                 result[index] = {}
             result[index][1] = "File Name: " + filename
             os.system(cmd)
             time.sleep(1)
         except AssertionError:
-            print(f"Warning!! In {temp_dir}, mp3_files length: {len(mp3_files)} is NOT one!!")
+            print(f"Warning!! In {temp_dir}, mp_files length: {len(mp_files)} is NOT one!!")
             return
 
 
@@ -236,14 +255,19 @@ class RipMusic:
                     for j in sorted(contents[i].keys()):
                         print(f'{i}, {j}, {contents[i][j]}')
 
-        mp3_file2look = f"{self.dest_dir}/*.mp3"
-        mp3_files = glob.glob(mp3_file2look)
-        if mp3_files:
-            mp3_files_count = len(mp3_files)
-            for i, filename in enumerate(mp3_files, start=1):
+
+        if self.file_format == 'mp3':
+            mp_file2look = f"{self.dest_dir}/*.mp3"
+        elif self.file_format == 'mp4':
+            mp_file2look = f"{self.dest_dir}/*.mp4"
+        #mp_file2look = f"{self.dest_dir}/*.mp3"
+        mp_files = glob.glob(mp_file2look)
+        if mp_files:
+            mp_files_count = len(mp_files)
+            for i, filename in enumerate(mp_files, start=1):
                 zeros = ""
-                if len(str(i)) < len(str(mp3_files_count)):
-                    zeros = "0"*(len(str(mp3_files_count)) - len(str(i)))
+                if len(str(i)) < len(str(mp_files_count)):
+                    zeros = "0"*(len(str(mp_files_count)) - len(str(i)))
                 print(f'{zeros}{i}, {filename}')
 
 
@@ -296,7 +320,8 @@ def main():
     obj = RipMusic()
     obj.parse_command_line(sys.argv[1:])
     print(f'In {function_name}(), obj.srce: {obj.srce}, File Format: {obj.file_format}')
-    """
+    print(f'youtube-dl command: {obj.rip_command}')
+    #print(f'{obj.file_format}: {FORMAT_RIP[obj.file_format]}')
     url_name = obj.prepare()
 
     if len(url_name) == 0:
@@ -319,7 +344,6 @@ def main():
     obj.summary(thread, result)
 
     print(f'Total run time: {round((time.time() - start), 3)}, Sum: {round(sum(duration.values()), 3)}')
-    """
     sys.exit(0)
 
 if __name__ == "__main__":
