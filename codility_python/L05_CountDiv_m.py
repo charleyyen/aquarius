@@ -39,6 +39,8 @@ def solution_1(A: int, B: int, K: int) -> int:
         i += 1
 
     return int((B-i)/K) + 1 # Must use floor calculation
+                            # Reason: int(-1/K) = 0 vs. -1//K = -1 where K > 1
+
 
 def solution_2(A: int, B: int, K: int) -> int:
     # Score 100%
@@ -48,7 +50,19 @@ def solution_2(A: int, B: int, K: int) -> int:
 
     return (B-i)//K + 1
 
+
 def solution_3(A: int, B: int, K: int) -> int:
+    # Score 100%
+    i = A
+    while i%K != 0:
+        i += 1
+        if i > B:
+            return 0
+
+    return (B-i)//K + 1
+
+
+def solution_4(A: int, B: int, K: int) -> int:
     # The following implementation (scored 100%) is from
     # https://github.com/johnmee/codility
     return B//K - (A-1)//K
@@ -83,6 +97,9 @@ def solution_3(A: int, B: int, K: int) -> int:
     # -----------------------------------------
     #return (B - A + 1) // K        # Score 25%
     # -----------------------------------------
+    # Note:
+    # (B - A)//K != B//K - A//K when A == 0
+    # ===================================================================
 
     # ===================================================================
     # Task Score 25% Correctness 0% Performance 50%
@@ -92,7 +109,62 @@ def solution_3(A: int, B: int, K: int) -> int:
     # -----------------------------------------
 
 if __name__ == '__main__':
-    solution = solution_2
+    import random
+    import time
+    from collections import defaultdict
+
+    summary = defaultdict(dict)
+    low = 1
+    high = int(2e9)
+    # high = 1000
+    loop_count = 3
+    for i in range(1, loop_count):
+        summary[i] = {}
+        k = random.randint(low, high)
+        for j, solution in enumerate([solution_2, solution_3, solution_4], start=1):
+            method = str(solution).split()[1]
+            start = time.time()
+            answer = solution(low, high, k)
+            elapsed = round(time.time() - start, 4)
+            summary[i][j] = (method, answer, elapsed)
+            print(f'i: {i}, j: {j}, k: {k}, summary[{i}][{j}]: #{summary[i][j]}#')
+
+    # =======================================================
+    # Test Run:
+    # ---------
+    # i: 1, j: 1, k: 880966716, summary[1][1]: #('solution_2', 2, 75.3832)#
+    # i: 1, j: 2, k: 880966716, summary[1][2]: #('solution_3', 2, 91.9494)#
+    # i: 1, j: 3, k: 880966716, summary[1][3]: #('solution_4', 2, 0.0)#
+    # i: 2, j: 1, k: 638037292, summary[2][1]: #('solution_2', 3, 54.7869)#
+    # i: 2, j: 2, k: 638037292, summary[2][2]: #('solution_3', 3, 66.9207)#
+    # i: 2, j: 3, k: 638037292, summary[2][3]: #('solution_4', 3, 0.0)#
+    # Conclusion:
+    # solution_4() is the best of the best.
+    # =======================================================
+
+    print(f'{"*"*60}')
+    low = 101
+    high = 124000000 - 1
+    k = 10000 - 1
+    for j, solution in enumerate([solution_2, solution_3, solution_4], start=1):
+        method = str(solution).split()[1]
+        start = time.time()
+        answer = solution(low, high, k)
+        elapsed = round(time.time() - start, 4)
+        summary[i][j] = (method, answer, elapsed)
+        print(f'j: {j}, k: {k}, summary[{i}][{j}]: #{summary[i][j]}#')
+
+    # =======================================================
+    # Test Run:
+    # ---------
+    # j: 1, k: 9999, summary[2][1]: #('solution_2', 12401, 0.0009)#
+    # j: 2, k: 9999, summary[2][2]: #('solution_3', 12401, 0.0011)#
+    # j: 3, k: 9999, summary[2][3]: #('solution_4', 12401, 0.0)#
+    # Conclusion:
+    # The performance test at codility.com needs improvement
+    # =======================================================
+
+    """
     print(solution(11, 345, 17))
     print(solution(0, 1, 11))
     print(solution(0, 0, 11))
@@ -101,3 +173,4 @@ if __name__ == '__main__':
     print(solution(11, 37, 17))
     print(solution(18, 37, 17))
     print(solution(11, 25, 5))
+    """
