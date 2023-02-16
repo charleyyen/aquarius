@@ -108,6 +108,29 @@ def solution_4(A: int, B: int, K: int) -> int:
     #return int((B-A+1)/K)          # Score 25%
     # -----------------------------------------
 
+
+def solution_5(A: int, B: int, K: int) -> int:
+    # Score 100% and performance is as good as solution_4!!
+    # But solution_4 is THE BEST
+    if A == 0:
+        return int(B/K) + 1
+
+    if B < K:
+        return 0
+
+    if A < K:
+        return (B-K)//K + 1
+
+    # Now, K <= A
+    i = 1
+    while i*K < A:
+        i += 1
+        if i*K > B:
+            return 0
+
+    return (B-i*K)//K + 1
+
+
 if __name__ == '__main__':
     import random
     import time
@@ -117,11 +140,12 @@ if __name__ == '__main__':
     low = 1
     high = int(2e9)
     # high = 1000
-    loop_count = 3
+    loop_count = 9
     for i in range(1, loop_count):
         summary[i] = {}
         k = random.randint(low, high)
-        for j, solution in enumerate([solution_2, solution_3, solution_4], start=1):
+        #for j, solution in enumerate([solution_2, solution_3, solution_4], start=1):
+        for j, solution in enumerate([solution_4, solution_5], start=1):
             method = str(solution).split()[1]
             start = time.time()
             answer = solution(low, high, k)
