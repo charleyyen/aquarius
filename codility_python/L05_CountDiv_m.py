@@ -188,6 +188,23 @@ if __name__ == '__main__':
     # The performance test at codility.com needs improvement
     # =======================================================
 
+    high = int(2e9)
+    low = int(high/19)
+    k = 17
+    for j, solution in enumerate([solution_4, solution_5], start=1):
+        method = str(solution).split()[1]
+        start = time.time()
+        answer = solution(low, high, k)
+        elapsed = round(time.time() - start, 4)
+        summary[i][j] = (method, answer, elapsed)
+        print(f'==-->>j: {j}, k: {k}, summary[{i}][{j}]: #{summary[i][j]}#')
+    # =======================================================
+    # Test Run:
+    # ---------
+    # ==-->>j: 1, k: 17, summary[8][1]: #('solution_4', 111455108, 0.0)#
+    # ==-->>j: 2, k: 17, summary[8][2]: #('solution_5', 111455108, 0.7966)#
+    # =======================================================
+
     """
     print(solution(11, 345, 17))
     print(solution(0, 1, 11))
