@@ -109,14 +109,26 @@ See 'fast_solution'. Score 100/100. O(N+M).
 https://codility.com/demo/results/trainingH6PA4P-5V7/
 """
 import random
+import string
+from aquarius.libs import split_array
 
 # maximum number of neucleotides in a sequence
 MAX_N = 100000
 # maximum number of queries
 MAX_M = 50000
 
+def create_impact_matrix():
+    letters_used = string.ascii_uppercase + string.ascii_lowercase
+    hash_ = {}
+    list_ = []
+    for i, e in enumerate(letters_used, start=1):
+        hash_[e] = i
+        list_.append((e, i))
+
+    return hash_, list_
+
 # impact factor of each neucleotide
-IMPACT = {"A": 1, "C": 2, "G": 3, "T": 4}
+IMPACT1 = {"A": 1, "C": 2, "G": 3, "T": 4}
 def solution_1(S, P, Q):
     # Task Score 62% Correctness 100% Performance 0%
 
@@ -130,68 +142,132 @@ def solution_1(S, P, Q):
     answers = []
     for i in range(len(P)):
         substring = S[P[i]:Q[i]+1]
-        answers.append(IMPACT[sorted(substring)[0]])
+        answers.append(IMPACT1[sorted(substring)[0]])
 
     return answers
 
-IMPACT = {"A": 1, "C": 2, "G": 3, "T": 4}
+IMPACT2 = {"A": 1, "C": 2, "G": 3, "T": 4}
 def solution_2(S, P, Q): # The same as the above
     # Task Score 62% Correctness 100% Performance 0%
     answers = []
     for i in range(len(P)):
         unique_substring = ''.join(set(S[P[i]:Q[i]+1]))
-        answers.append(IMPACT[sorted(unique_substring)[0]])
+        answers.append(IMPACT2[sorted(unique_substring)[0]])
 
     return answers
 
-IMPACT = {"A": 1, "C": 2, "G": 3, "T": 4}
+#IMPACT3 = {"A": 1, "C": 2, "G": 3, "T": 4}
+IMPACT3, nothing = create_impact_matrix()
 def solution_3(S, P, Q):
     # Score 100%, which is a surpise.
-    # Reason: IMPACT is a dictionary so the keys are not sorted.
+    # Reason: IMPACT3 is a dictionary so the keys are not sorted.
     answers = []
     for i in range(len(P)):
         substring = S[P[i]:Q[i]+1]
-        for x, y in IMPACT.items():
-            #print(f'{i}, P[{i}]: {P[i]}, Q[{i}]: {Q[i]}, {S} | x: {x}, y: {y} | {substring}')
+        for x, y in IMPACT3.items():
             if x in substring:
                 answers.append(y)
                 break
 
     return answers
 
-IMPACT = [("A", 1), ("C", 2), ("G", 3), ("T", 4)]
+#IMPACT4 = [("A", 1), ("C", 2), ("G", 3), ("T", 4)]
+nothing, IMPACT4 = create_impact_matrix()
 def solution_4(S, P, Q):
-    # Score 100%, which is NOT a surpise. However, IMPACT as a list is actually manually sorted,
+    # Score 100%, which is NOT a surpise. However, IMPACT4 as a list is actually manually sorted,
     # which is not an ideal way to implement.
     answers = []
     for i in range(len(P)):
         substring = S[P[i]:Q[i]+1]
-        for x in IMPACT:
-            #print(f'{i}, P[{i}]: {P[i]}, Q[{i}]: {Q[i]}, {S} | x: {x[0]}, y: {x[1]} | {substring}')
+        for x in IMPACT4:
             if x[0] in substring:
                 answers.append(x[1])
                 break
 
     return answers
 
-IMPACT = {"A": 1, "C": 2, "G": 3, "T": 4}
+#IMPACT5 = {"A": 1, "C": 2, "G": 3, "T": 4}
+IMPACT5, nothing = create_impact_matrix()
 def solution_5(S, P, Q):
-    # Score 100%. This version sorts IMPACT before looping through it, which could slow down
+    # Score 100%. This version sorts IMPACT5 before looping through it, which could slow down
     # the performance a bit. But it should guarantee the result is correct
     answers = []
     for i in range(len(P)):
         substring = S[P[i]:Q[i]+1]
-        for k in sorted(IMPACT.keys()):
-            #print(f'{i}, P[{i}]: {P[i]}, Q[{i}]: {Q[i]}, {S} | k: {k}, y: {IMPACT[k]} | {substring}')
+        for k in sorted(IMPACT5.keys()):
             if k in substring:
-                answers.append(IMPACT[k])
+                answers.append(IMPACT5[k])
                 break
 
     return answers
+
 if __name__ == '__main__':
-    P = [2,5,0]
-    Q = [4,5,6]
-    S = 'CAGCCTA'
-    findings = solution(S, P, Q)
-    print(f'findings: {findings}')
+    import time
+    import numpy as np
+
+    #create_impact_matrix()
+    #exit()
+    summary = {}
+
+    #MAX_N = MAX_M = 11 
+
+    string_used = string.ascii_uppercase + string.ascii_lowercase
+    print(string_used)
+    list_ = list(string_used)
+    random.shuffle(list_)
+    string_used = ''.join(list_)
+    print(string_used)
+
+    #S = split_array.create_random_alphabet_string(letters_used='ACGT', size=MAX_N)
+    S = split_array.create_random_alphabet_string(letters_used=string_used, size=MAX_N)
+    P, Q = split_array.create_a_pair_of_random_array(low=0, high=len(S), size=MAX_M)
+
+    print(f'S length: {len(S)}, P/Q length: {len(P)}')
+
+    if len(S) < 10:
+        print(f'S length: {len(S)}, S: {S}')
+    else:
+        print(f'S length: {len(S)}, S[:5]: {S[:5]}, S[-5:]: {S[-5:]}')
+    if len(P) < 10:
+        print(f'P length: {len(P)}, P: {P}')
+        print(f'Q length: {len(Q)}, Q: {Q}')
+    else:
+        print(f'P length: {len(P)}, P[:5]: {P[:5]}, P[-5:]: {P[-5:]}')
+        print(f'Q length: {len(Q)}, Q[:5]: {Q[:5]}, Q[-5:]: {Q[-5:]}')
+
+    print()
+    for j, solution in enumerate([solution_3, solution_4, solution_5], start=1):
+        method = str(solution).split()[1]
+        start = time.time()
+        answer = solution(S, P, Q)
+        elapsed = round(time.time() - start, 4)
+        summary[j] = (method, answer, elapsed)
+        if len(answer) < 10:
+            print(f'==-->>j: {j}, {summary[j][0]} - {summary[j][2]}, #{summary[j][1]}#')
+        else:
+            print(f'==-->>j: {j}, {summary[j][0]} - {summary[j][2]}, First 5: {summary[j][1][:5]}, Last 5: {summary[j][1][-5:]}')
+
+    print()
+    arr0 = np.array(summary[1][1])
+    if len(arr0) < 10:
+        print(f'==>>1, arr0 length: {len(arr0)}, #{arr0}')
+    else:
+        print(f'==>>1, arr0 length: {len(arr0)}, First 5: {arr0[:5]}, Last 5: {arr0[-5:]}')
+    for j in (2, 3):
+        arr = np.array(summary[j][1])
+        if len(arr0) < 10:
+            print(f'-->>{j}, arr  length: {len(arr)}, #{arr}')
+        else:
+            print(f'-->>{j}, arr  length: {len(arr)}, First 5: {arr[:5]}, Last 5: {arr[-5:]}')
+        assert np.array_equal(arr0, arr)
+
+    set0 = set(arr0)
+    int_ = random.randint(len(arr0)//10, len(arr0))
+    print(f'int_: {int_}, length: {len(set0)}, set0: {set0}')
+    print(f'section at {int_}: {arr0[int_:int_+100]}')
+#    P = [2,5,0]
+#    Q = [4,5,6]
+#    S = 'CAGCCTA'
+#    findings = solution(S, P, Q)
+#    print(f'findings: {findings}')
 
