@@ -110,7 +110,7 @@ https://codility.com/demo/results/trainingH6PA4P-5V7/
 """
 import random
 import string
-from aquarius.libs import split_array
+from aquarius.libs import data_generator
 
 # maximum number of neucleotides in a sequence
 MAX_N = 100000
@@ -201,29 +201,37 @@ def solution_5(S, P, Q):
 
     return answers
 
+def create_Q(baseline_array: list, max_value: int) -> list:
+    q = []
+    for e in baseline_array:
+        q.append(random.randint(e, max_value))
+
+    return q
+
+def display(data):
+    for key, value in data.items():
+        print(f'{key} -> {value}')
+
 if __name__ == '__main__':
     import time
     import numpy as np
 
-    #create_impact_matrix()
-    #exit()
     summary = {}
 
-    #MAX_N = MAX_M = 11 
+    #data = data_generator.create_random_alphabet_string(letters_used='ACGT', size=MAX_N)
+    data = data_generator.create_random_alphabet_string(size=MAX_N)
+    #display(data)
+    S = data['string_']
+    #print(S)
+    assert len(S) == MAX_N
 
-    string_used = string.ascii_uppercase + string.ascii_lowercase
-    print(string_used)
-    list_ = list(string_used)
-    random.shuffle(list_)
-    string_used = ''.join(list_)
-    print(string_used)
+    data = data_generator.create_random_number_array(low=0, high=len(S), size=MAX_M)
+    P = data['array_']
+    print(f'{len(P)}, P Type: {type(P)}, P element type: {type(P[0])}, MAX_M: {MAX_M}')
+    assert len(P) == MAX_M
 
-    #S = split_array.create_random_alphabet_string(letters_used='ACGT', size=MAX_N)
-    S = split_array.create_random_alphabet_string(letters_used=string_used, size=MAX_N)
-    P, Q = split_array.create_a_pair_of_random_array(low=0, high=len(S), size=MAX_M)
-
-    print(f'S length: {len(S)}, P/Q length: {len(P)}')
-
+    Q = create_Q(P, len(S))
+    assert len(P) == len(Q)
     if len(S) < 10:
         print(f'S length: {len(S)}, S: {S}')
     else:
@@ -261,10 +269,10 @@ if __name__ == '__main__':
             print(f'-->>{j}, arr  length: {len(arr)}, First 5: {arr[:5]}, Last 5: {arr[-5:]}')
         assert np.array_equal(arr0, arr)
 
-    set0 = set(arr0)
-    int_ = random.randint(len(arr0)//10, len(arr0))
-    print(f'int_: {int_}, length: {len(set0)}, set0: {set0}')
-    print(f'section at {int_}: {arr0[int_:int_+100]}')
+    #set0 = set(arr0)
+    #int_ = random.randint(len(arr0)//10, len(arr0))
+    #print(f'int_: {int_}, length: {len(set0)}, set0: {set0}')
+    #print(f'section at {int_}: {arr0[int_:int_+100]}')
 #    P = [2,5,0]
 #    Q = [4,5,6]
 #    S = 'CAGCCTA'
