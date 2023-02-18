@@ -68,7 +68,7 @@ Unauthorized copying, publication or disclosure prohibited.
 import random
 import time
 
-from aquarius.libs import split_array
+from aquarius.libs import data_generator
 
 def solution_1_77_100_60(N, A):
     # Task Score 77% Correctness 100% Performance 60%
@@ -225,11 +225,12 @@ def main():
     # N and M are integers within the range [1..100,000];
     # each element of array A is an integer within the range [1..N + 1].
     N = M = 100000
-    data = split_array.create_random_array(high=M, size=M)
+    data_hash = data_generator.create_random_number_array(high=M, size=M)
+    data = data_hash['array_']
     random_number_index = random.randint(1, len(data))
     random_number = int(data[random_number_index]//(N/1000))
     for i in range(random_number):
-        data.append(N+1)
+        data = np.append(data, N+1)
     random.shuffle(data)
     # print(f'random_number: {random_number}, N: {N}, data length: {len(data)}')
 
@@ -253,6 +254,7 @@ def main():
 
 
 if __name__ == '__main__':
+    import numpy as np
     data = [3, 4, 4, 6, 1, 1, 2, 2, 2, 3, 6, 5, 3, 3, 3, 3, 3, 6, 1, 4, 4]
     result = solution_1_77_100_60(6, data)
     print(f'Solution 1: {result}')

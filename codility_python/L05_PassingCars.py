@@ -50,7 +50,7 @@ Copyright 2009–2022 by Codility Limited. All Rights Reserved.
 Unauthorized copying, publication or disclosure prohibited.
 """
 import time
-from aquarius.libs import split_array
+from aquarius.libs import data_generator
 
 MAX_PAIRS = int(1e9)
 def solution_1(A):
@@ -79,7 +79,8 @@ def main():
     # N is an integer within the range [1..100,000];
     # each element of array A is an integer that can have one of the following values: 0, 1.
     N = 10000
-    data = split_array.create_random_array(low=0,high=1, size=N)
+    data_hash = data_generator.create_random_number_array(low=0,high=1, size=N)
+    data = data_hash['array_'].tolist()
     #if len(data) < 21:
     #    print(f'{data}')
     #else:
