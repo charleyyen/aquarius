@@ -4,6 +4,22 @@ A standalone tool to parse a full patient test's serial console outputs
 youtube-dl --extract-audio --audio-format mp3 -o "%(title)s.%(ext)s" http://www.youtube.com/watch?v=rtOvBOTyX00o
 youtube-dl -x --audio-quality 0 -f bestaudio --restrict-filenames --audio-format \
         mp3 -o "/tmp/qq/%(title)s.%(ext)s" --no-part https://www.youtube.com/watch?v=6QORyIWN7JI
+
+As of today, 02/20/2023, downloaded yt-dlp using cmd:
+-----------------------------------------------------------------------------------
+[aquarius] mybin 176 => sudo snap install yt-dlp
+yt-dlp a9d069f5b from Graham Morrison (morrisong) installed
+[aquarius] mybin 177 => which yt-dlp
+/snap/bin/yt-dlp
+[aquarius] mybin 178 => yt-dlp --version
+2022.11.11
+
+[aquarius] tmp 350 => yt-dlp -U
+Latest version: 2023.02.17, Current version: 2022.11.11
+ERROR: You installed yt-dlp with a package manager or setup.py; Use that to update
+
+-----------------------------------------------------------------------------------
+
 """
 
 import getopt
@@ -23,8 +39,10 @@ from multiprocessing.pool import ThreadPool as Pool
 FILEFORMAT = ['mp3', 'mp4']
 DEST = '/home/cyan/Music/dest/'
 DEST = '/tmp/'
-RIP = 'youtube-dl -x --audio-quality 0 -f bestaudio --restrict-filenames --audio-format mp3 '
-RIPV = 'youtube-dl --recode-video mp4'
+#RIP = 'youtube-dl -x --audio-quality 0 -f bestaudio --restrict-filenames --audio-format mp3 '
+#RIPV = 'youtube-dl --recode-video mp4'
+RIP = 'yt-dlp -x --audio-quality 0 -f bestaudio --restrict-filenames --audio-format mp3 '
+RIPV = 'yt-dlp --recode-video mp4'
 FORMAT_RIP = {
     'mp3': RIP,
     'mp4': RIPV
