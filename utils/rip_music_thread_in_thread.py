@@ -26,6 +26,7 @@ import getopt
 import glob
 import inspect
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -225,11 +226,10 @@ class RipMusic:
 
         try:
             assert len(mp_files) == 1
-            cmd = f"mv {mp_files[0]} {filename}"
             if index not in result.keys():
                 result[index] = {}
             result[index][1] = "File Name: " + filename
-            os.system(cmd)
+            shutil.move(mp_files[0], filename)
             time.sleep(1)
         except AssertionError:
             print(f"Warning!! In {temp_dir}, mp_files length: {len(mp_files)} is NOT one!!")
