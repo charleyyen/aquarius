@@ -10,37 +10,23 @@ def handle_special_cases(fish_size, direction):
 def handle_generic_cases(fish_size, direction):
     """handle_generic_cases"""
     d_live = []
-    u_live = []
+    count = len(fish_size)
+
     for i, fish_i in enumerate(fish_size):
         if direction[i] > 0:
             d_live.append(fish_i)
         if i == 0:
             continue
 
-        if direction[i-1] > direction[i]:
-            if fish_size[i-1] < fish_size[i]:
-                if len(d_live) > 0:
-                    for d_fish in d_live[::-1]:
-                        if d_fish > fish_i:
-                            break
-                        d_live.pop()
-                if len(d_live) == 0:
-                    u_live.append(fish_i)
-        else: # direction[i-1] <= direction[i]
-            if fish_size[i-1] > fish_size[i]:
-                if len(d_live) == 0:
-                    u_live.append(fish_i)
-            else:
-                if len(d_live) > 0 and direction[i] == 0:
-                    for d_fish in d_live[::-1]:
-                        if d_fish > fish_i:
-                            break
-                        d_live.pop()
-                if len(d_live) == 0:
-                    if direction[i] == 0:
-                        u_live.append(fish_i)
+        if direction[i] == 0:
+            if len(d_live) > 0:
+                for d_fish in d_live[::-1]:
+                    count -= 1
+                    if d_fish > fish_i:
+                        break
+                    d_live.pop()
 
-    return len(d_live) + len(u_live)
+    return count
 
 
 def solution(fish_size, direction):
