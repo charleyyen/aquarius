@@ -34,6 +34,8 @@ Write an efficient algorithm for the following assumptions:
 Copyright 2009–2023 by Codility Limited. All Rights Reserved. Unauthorized
 copying, publication or disclosure prohibited.
 """
+from aquarius.libs import data_generator
+
 def solution_1(H):
     # Task Score 85% Correctness 100% Performance 77%
     # large_piramid TIMEOUT ERROR
@@ -122,8 +124,18 @@ def solution_4(H):
     return brick_count
 
 if __name__ == '__main__':
-    H = [1,2,3,7,9,8,3,2,9]
-    print(solution(H))
+    import time
+    size = 100
+    high = 50
+    data_hash = data_generator.create_random_number_array(size=size, high=high)
+    print(f"data_hash['array_'] length: {len(data_hash['array_'])}, max: {max(data_hash['array_'])}")
+    for solution in [solution_1, solution_3, solution_4]:
+        start = time.time()
+        answer = solution(data_hash['array_'])
+        print(f'answer: {answer}, time: {round((time.time() - start), 3)}')
+
+#    H = [1,2,3,7,9,8,3,2,9]
+#    print(solution(H))
 #    H = [1,2,3,4,5,1,2,3,4,5,1,2,3,4,5]
 #    print(solution(H))
 #    H = [1,2,3,4,5,4,3,2,1,2,3,4,5,4,3,2,1,2,3,4,5,4,3,2,1]

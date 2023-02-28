@@ -181,7 +181,7 @@ def solution_v4(A):
 
     return equi_leader_count
 
-def solution_v5(A):
+def solution_v5_best(A):
     # Task Score 100%
     if len(set(A)) == 1:
         return len(A) - 1
@@ -285,8 +285,70 @@ def solution_v6(A):
     return equi_leader_count
 
 if __name__ == '__main__':
+    import time
+    from aquarius.libs import data_generator
     arr = [4,3,4,4,4,2,2,4]
-    solution = solution_best_modified
+    solution = solution_v5_modified
     equi_leader_count = solution(arr)
     print(f'equi_leader_count: {equi_leader_count}')
+
+    #N is an integer within the range [1..100,000];
+    #each element of array A is an integer within the range [−1,000,000,000..1,000,000,000].
+    low = -500_000_000
+    high = +500_000_000
+    maxium_size = 100000
+    size = 35000
+    leader_size = maxium_size - size
+    data_hash = data_generator.create_random_number_array(low=low, high=high, size=size)
+    arr = data_hash['array_'].tolist()
+    for i in range(leader_size):
+        arr.append(high+1)
+
+    solution_list = [
+            solution_v1,
+            solution_v2,
+            solution_v3,
+            solution_v4,
+            solution_v5_best,
+            solution_v5_modified,
+            solution_v6
+            ]
+    summary = []
+    for j, solution in enumerate(solution_list, start=1):
+        method = str(solution).split()[1]
+        start = time.time()
+        answer = solution(arr)
+        elapsed = round(time.time() - start, 4)
+        #print(method, answer, elapsed)
+        summary.append((method, answer, elapsed))
+
+    largest = 0
+    longest_name = 0
+    for tuple_ in summary:
+        if longest_name < len(tuple_[0]):
+            longest_name = len(tuple_[0])
+        if largest < tuple_[1]:
+            largest = tuple_[1]
+
+    longest = len(str(largest))
+    for j, tuple_ in enumerate(summary, start=1):
+        name = tuple_[0]
+        while len(name) < longest_name:
+            name = ' ' + name
+
+        answer = tuple_[1]
+        while len(str(answer)) < longest:
+            answer = ' ' +  answer
+
+        print(f'{j}, {name} - {answer}: Time Consumed: {tuple_[2]}')
+
+    """
+    1,          solution_v1 - 29999: Time Consumed: 1471.1237
+    2,          solution_v2 - 29999: Time Consumed: 125.3926
+    3,          solution_v3 - 29999: Time Consumed: 96.6138
+    4,          solution_v4 - 29999: Time Consumed: 47.2818
+    5,     solution_v5_best - 29999: Time Consumed: 0.036
+    6, solution_v5_modified - 29999: Time Consumed: 0.0388
+    7,          solution_v6 - 29999: Time Consumed: 0.0397
+    """
 
