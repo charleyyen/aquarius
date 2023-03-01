@@ -27,6 +27,7 @@ def create_random_number_array(
             array_ = np.random.randint(low=low, high=high+1, size=size)
 
     data['array_'] = array_
+    data['list_'] = array_.tolist()
     data['set_'] = set(array_.flatten())
     data['sorted_'] = sorted(array_)
     data['sorted_unique'] = sorted(list(set(array_.flatten())))

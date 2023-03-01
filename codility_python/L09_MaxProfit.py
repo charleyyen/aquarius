@@ -46,8 +46,11 @@ Write an efficient algorithm for the following assumptions:
 Copyright 2009–2023 by Codility Limited. All Rights Reserved. Unauthorized
 copying, publication or disclosure prohibited.
 """
-def solution(A, possible_max=None):
+import sys # solution_1
+
+def solution_mine(A, possible_max=None):
     # Task Score 100%
+    # Way more efficient than solution_1()
     if len(set(A)) <= 1:
         return possible_max if possible_max else 0
 
@@ -81,11 +84,45 @@ def solution(A, possible_max=None):
     return profit_1
 
 
+def solution_1(A):
+    # https://martinkysel.com/codility-maxprofit-solution/
+    # Score 100% but it's almost 3 times slower
+    # sys.maxsize == 9223372036854775807
+    min_price = sys.maxsize
+    max_profit = 0
+    for a in A:
+        min_price = min([min_price, a])
+        max_profit = max([max_profit, a - min_price])
+
+    return max_profit
+
 if __name__ == '__main__':
+    import my_test # in house
+
+    import time
+    from aquarius.libs import data_generator
+
+    arr = [23171, 21011, 21123, 21366, 21013, 21367]
     arr = [6, 1, 3, 4, 2, 5]
     arr = [6, 6, 5, 4, 3, 4, 1]
     arr = [99, 6, 5, 14, 3, 4, 1]
-    arr = [23171, 21011, 21123, 21366, 21013, 21367]
-    print(arr)
-    profit = solution(arr)
-    print(f'max profit: {profit}')
+    # N is an integer within the range [0..400,000];
+    # each element of array A is an integer within the range [0..200,000].
+    low = 0
+    high = 200_000
+    size = 4_000_000
+    data_hash = data_generator.create_random_number_array(low=low, high=high, size=size)
+    arr = data_hash['list_']
+    print(f'Array length in test: {len(arr)}')
+
+    summary = []
+    solution_list = [solution_1, solution_mine]
+    for j, solution in enumerate(solution_list, start=1):
+        method = str(solution).split()[1]
+        start = time.time()
+        answer = solution(arr)
+        elapsed = round(time.time() - start, 4)
+        #print(method, answer, elapsed)
+        summary.append((method, answer, elapsed))
+
+    my_test.display_summary(summary)

@@ -285,6 +285,7 @@ def solution_v6(A):
     return equi_leader_count
 
 if __name__ == '__main__':
+    import my_test # in house
     import time
     from aquarius.libs import data_generator
     arr = [4,3,4,4,4,2,2,4]
@@ -296,8 +297,8 @@ if __name__ == '__main__':
     #each element of array A is an integer within the range [−1,000,000,000..1,000,000,000].
     low = -500_000_000
     high = +500_000_000
-    maxium_size = 100000
-    size = 35000
+    maxium_size = 1000
+    size = 350
     leader_size = maxium_size - size
     data_hash = data_generator.create_random_number_array(low=low, high=high, size=size)
     arr = data_hash['array_'].tolist()
@@ -322,27 +323,11 @@ if __name__ == '__main__':
         #print(method, answer, elapsed)
         summary.append((method, answer, elapsed))
 
-    largest = 0
-    longest_name = 0
-    for tuple_ in summary:
-        if longest_name < len(tuple_[0]):
-            longest_name = len(tuple_[0])
-        if largest < tuple_[1]:
-            largest = tuple_[1]
-
-    longest = len(str(largest))
-    for j, tuple_ in enumerate(summary, start=1):
-        name = tuple_[0]
-        while len(name) < longest_name:
-            name = ' ' + name
-
-        answer = tuple_[1]
-        while len(str(answer)) < longest:
-            answer = ' ' +  answer
-
-        print(f'{j}, {name} - {answer}: Time Consumed: {tuple_[2]}')
+    my_test.display_summary(summary)
 
     """
+    maxium_size = 100_000
+    size = 35000
     1,          solution_v1 - 29999: Time Consumed: 1471.1237
     2,          solution_v2 - 29999: Time Consumed: 125.3926
     3,          solution_v3 - 29999: Time Consumed: 96.6138
@@ -350,5 +335,25 @@ if __name__ == '__main__':
     5,     solution_v5_best - 29999: Time Consumed: 0.036
     6, solution_v5_modified - 29999: Time Consumed: 0.0388
     7,          solution_v6 - 29999: Time Consumed: 0.0397
+
+    maxium_size = 10_000
+    size = 3500
+    1,          solution_v1 - 2999: Time Consumed: 11.807
+    2,          solution_v2 - 2999: Time Consumed: 1.1709
+    3,          solution_v3 - 2999: Time Consumed: 0.9138
+    4,          solution_v4 - 2999: Time Consumed: 0.3988
+    5,     solution_v5_best - 2999: Time Consumed: 0.0036
+    6, solution_v5_modified - 2999: Time Consumed: 0.0039
+    7,          solution_v6 - 2999: Time Consumed: 0.0038
+
+    maxium_size = 1000
+    size = 350
+    1,          solution_v1 - 299: Time Consumed: 0.1023
+    2,          solution_v2 - 299: Time Consumed: 0.0108
+    3,          solution_v3 - 299: Time Consumed: 0.0084
+    4,          solution_v4 - 299: Time Consumed: 0.0037
+    5,     solution_v5_best - 299: Time Consumed: 0.0003
+    6, solution_v5_modified - 299: Time Consumed: 0.0003
+    7,          solution_v6 - 299: Time Consumed: 0.0003
     """
 
