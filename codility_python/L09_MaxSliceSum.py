@@ -30,7 +30,7 @@ Write an efficient algorithm for the following assumptions:
 Copyright 2009–2023 by Codility Limited. All Rights Reserved. Unauthorized
 copying, publication or disclosure prohibited.
 """
-def solution(array_):
+def solution_mine(array_):
     """Find a maximum sum of a compact subsequence of array elements. Score 100%"""
     if max(array_) < 0:
         # array_ll negative
@@ -58,9 +58,46 @@ def solution(array_):
 
     return max_positive
 
+def solution_other(array_):
+    """
+    another neat solution:
+    https://curt-park.github.io/2018-09-13/algorithm-max-slice-sum/
+    """
+    max_sum = sub_sum = array_[0]
+    for i in range(1, len(array_)):
+        sub_sum = max(sub_sum + array_[i], array_[i])
+        max_sum = max(max_sum, sub_sum)
+
+    return max_sum
+
 
 if __name__ == '__main__':
-    arr = [30,-1,2,-1,9,-6,4,0,-1]
-    arr = [3,2,-6,4,0]
-    arr = [-1,99,-98,94,5]
-    print(solution(arr))
+    import my_test # in house
+    import time
+    from aquarius.libs import data_generator
+
+    #arr = [30,-1,2,-1,9,-6,4,0,-1]
+    #arr = [3,2,-6,4,0]
+    #arr = [-1,99,-98,94,5]
+    #print(solution(arr))
+
+    # N is an integer within the range [1..1,000,000];
+    # each element of array A is an integer within the range [−1,000,000..1,000,000];
+    # the result will be an integer within the range [−2,147,483,648..2,147,483,647].
+    low = -1_000_000
+    high = 1_000_000
+    size = 1_000_000
+    data_hash = data_generator.create_random_number_array(low=low, high=high, size=size)
+    arr = data_hash['list_']
+    print(f'Array length in test: {len(arr)}')
+    solution_list = [solution_other, solution_mine]
+    summary = []
+    for j, solution in enumerate(solution_list, start=1):
+        method = str(solution).split()[1]
+        start = time.time()
+        answer = solution(arr)
+        elapsed = round(time.time() - start, 4)
+        #print(method, answer, elapsed)
+        summary.append((method, answer, elapsed))
+    my_test.display_summary(summary)
+
