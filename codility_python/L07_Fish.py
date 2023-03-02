@@ -68,6 +68,7 @@ def solution(fish_size, direction):
 
     for i, fish_i in enumerate(fish_size):
         if direction[i] > 0:
+            # Save all the downstream fish
             d_live.append(fish_i)
 
         if direction[i] == 0:
@@ -76,6 +77,8 @@ def solution(fish_size, direction):
                     count -= 1
                     if d_fish > fish_i:
                         break
+                    # Remove all the downstream fish from d_live backwards
+                    # if it's smaller than the upstream fish
                     d_live.pop()
 
     return count
