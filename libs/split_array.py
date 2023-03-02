@@ -2,8 +2,13 @@ import random
 import time
 from array import *
 
-def split_list_by_value_1(value, data_list):
-    indices = [i for i, x in enumerate(data_list) if x == value]
+def split_list_by_value_1(value, data_list, more_or_less=0):
+    if more_or_less < 0:
+        indices = [i for i, x in enumerate(data_list) if x <= value]
+    elif more_or_less > 0:
+        indices = [i for i, x in enumerate(data_list) if x >= value]
+    else: # more_or_less == 0:
+        indices = [i for i, x in enumerate(data_list) if x == value]
 
     blocks = []
     i = 0
@@ -15,14 +20,27 @@ def split_list_by_value_1(value, data_list):
     return blocks, indices
 
 
-def split_list_by_value_2(value, data_list):
+def split_list_by_value_2(value, data_list, more_or_less=0):
     chunk = []
     for val in data_list:
-        if val == value:
-            yield chunk
-            chunk = []
-        else:
-            chunk.append(val)
+        if more_or_less < 0:
+            if val <= value:
+                yield chunk
+                chunk = []
+            else:
+                chunk.append(val)
+        elif more_or_less > 0:
+            if val >= value:
+                yield chunk
+                chunk = []
+            else:
+                chunk.append(val)
+        else: # more_or_less == 0
+            if val == value:
+                yield chunk
+                chunk = []
+            else:
+                chunk.append(val)
     yield chunk
 
 def create_random_array(
@@ -70,6 +88,7 @@ if __name__ == '__main__':
     results = split_list_by_value_2(separator, data) # Very efficient
     print(f'A. split_list_by_value_2(): Total run time: {round((time.time() - start), 3)}')
     blocks2 = []
+    #for element in split_list_by_value_2(separator, data):
     for element in results:
         # Time consuming
         blocks2.append(element)
