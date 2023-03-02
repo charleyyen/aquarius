@@ -46,11 +46,11 @@ Write an efficient algorithm for the following assumptions:
 Copyright 2009–2023 by Codility Limited. All Rights Reserved. Unauthorized
 copying, publication or disclosure prohibited.
 """
-import sys # solution_1
+import sys # solution_other
 
 def solution_mine(A, possible_max=None):
     # Task Score 100%
-    # Way more efficient than solution_1()
+    # Way more efficient than solution_other()
     if len(set(A)) <= 1:
         return possible_max if possible_max else 0
 
@@ -80,11 +80,11 @@ def solution_mine(A, possible_max=None):
 
     if len(A[max_0_index+1:min_0_index]) > 0:
         # Key: Recursive call
-        return solution(A[max_0_index+1:min_0_index], possible_max=profit_1)
+        return solution_mine(A[max_0_index+1:min_0_index], possible_max=profit_1)
     return profit_1
 
 
-def solution_1(A):
+def solution_other(A):
     # https://martinkysel.com/codility-maxprofit-solution/
     # Score 100% but it's almost 3 times slower
     # sys.maxsize == 9223372036854775807
@@ -110,13 +110,15 @@ if __name__ == '__main__':
     # each element of array A is an integer within the range [0..200,000].
     low = 0
     high = 200_000
-    size = 4_000_000
+    size = 400_000
     data_hash = data_generator.create_random_number_array(low=low, high=high, size=size)
     arr = data_hash['list_']
     print(f'Array length in test: {len(arr)}')
 
+    solution_list = [solution_other, solution_mine]
+    # As of today, 03/02/2023, my_test.get_summary() is incomplete
+    #summary = my_test.get_summary(solution_list, 'L09_MaxProfit', arr)
     summary = []
-    solution_list = [solution_1, solution_mine]
     for j, solution in enumerate(solution_list, start=1):
         method = str(solution).split()[1]
         start = time.time()
@@ -124,5 +126,5 @@ if __name__ == '__main__':
         elapsed = round(time.time() - start, 4)
         #print(method, answer, elapsed)
         summary.append((method, answer, elapsed))
-
     my_test.display_summary(summary)
+
