@@ -1,0 +1,22 @@
+    #low = -1_000_000
+    #high = 1_000_000
+    #size = 1_000_000
+    #solution_list = [solution_other, solution_mine]
+
+    import my_test # in house
+    import time
+    from aquarius.libs import data_generator
+
+    data_hash = data_generator.create_random_number_array(low=low, high=high, size=size)
+    arr = data_hash['list_']
+    print(f'Array length in test: {len(arr)}')
+    summary = []
+    for j, solution in enumerate(solution_list, start=1):
+        method = str(solution).split()[1]
+        start = time.time()
+        answer = solution(arr)
+        elapsed = round(time.time() - start, 4)
+        #print(method, answer, elapsed)
+        summary.append((method, answer, elapsed))
+    my_test.display_summary(summary)
+
