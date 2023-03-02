@@ -31,7 +31,10 @@ Copyright 2009–2023 by Codility Limited. All Rights Reserved. Unauthorized
 copying, publication or disclosure prohibited.
 """
 def solution_mine(array_):
-    """Find a maximum sum of a compact subsequence of array elements. Score 100%"""
+    """
+    Find a maximum sum of a compact subsequence of array elements.
+    Score 100% and it's 50% faster than solution_other()
+    """
     if max(array_) < 0:
         # array_ll negative
         return sorted(array_)[-1]
@@ -100,4 +103,8 @@ if __name__ == '__main__':
         #print(method, answer, elapsed)
         summary.append((method, answer, elapsed))
     my_test.display_summary(summary)
+
+#Array length in test: 1000000
+#1, solution_other - 1153897244: Time Consumed: 0.397
+#2,  solution_mine - 1153897244: Time Consumed: 0.2009
 
