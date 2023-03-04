@@ -1,4 +1,5 @@
 import data_generator # in house
+from aquarius.codility_python import my_test # in house
 
 import random
 import time
@@ -50,6 +51,18 @@ def split_list_by_value_2(value, data_list, more_or_less=0):
     yield chunk
 
 def find_peak_valley_1(arr, thresh=0, debug=False):
+    """
+    While this method finction-wise is correct, the performance is UNACCEPTABLE.
+    For example, when
+        size=100_000
+        high=10_000
+        low = (-1)*high
+        data_hash = data_generator.create_random_number_array(low=low, high=high, size=size)
+    Below is the performance test results from test_find_peak_valley_performance()
+        array_manipulation.py Array length in test: 100000
+        find_peak_valley_1 29190 29294 446.4591
+        find_peak_valley_2 29190 29294 0.0033
+    """
     peak = min(arr) - 1
     valley = max(arr) + 1
     peak_index_value = {}
@@ -100,12 +113,17 @@ def find_peak_valley_1(arr, thresh=0, debug=False):
 
 
 def find_peak_valley_2(data, thresh=0, debug=False):
-    peak_idx, _ = find_peaks(data, height=thresh)
-    valley_idx, _ = find_peaks(-data, height=thresh)
+    peak_idx, peak = find_peaks(data, height=thresh)
+    valley_idx, valley = find_peaks(-data, height=thresh)
+    data = [-5, 1, -1, -6, -5, -5, -3, -7, -4, -6]
+    data = np.array(data)
+    thresh = 0
     if debug:
-        print(f'thresh: {thresh}')
-        print(f'peak_idx type: {type(peak_idx)}, length: {len(peak_idx)}\n{peak_idx}')
-        print(f'valley_idx type: {type(valley_idx)}, length: {len(valley_idx)}\n{valley_idx}')
+        print(f'thresh: {thresh}\n{data}\n{data.tolist()}')
+        #print(f'peak type: {type(peak)}, length: {len(peak)}\n{peak_idx}\n{peak}')
+        print(f'peak_idx: {peak_idx}\npeak value: {peak}')
+        #print(f'valley type: {type(valley)}, length: {len(valley)}\n{valley_idx}\n{valley}')
+        print(f'valley_idx: {valley_idx}\nvalley value: {valley}')
     return peak_idx, valley_idx
 
 
@@ -174,27 +192,58 @@ class TestArrayManipulation:
         print(f'B. split_list_by_value_2(): Total run time: {round((time.time() - start), 3)}')
         assert len(blocks2) == len(blocks1)
 
-    def test_find_peak_valley(self):
+    def test_find_peak_valley_performance(self):
+        size=1000
+        high=100
+        low = (-1)*high
+        data_hash = data_generator.create_random_number_array(low=low, high=high, size=size)
+        arr = data_hash['array_']
+        solution_list = [find_peak_valley_1, find_peak_valley_2]
+        print(f'Array length in test: {len(arr)}')
+        summary = []
+        for j, solution in enumerate(solution_list, start=1):
+            method = str(solution).split()[1]
+            start = time.time()
+            answer = solution(arr)
+            elapsed = round(time.time() - start, 4)
+            print(method, len(answer[0]), len(answer[1]), elapsed)
+            #summary.append((method, answer, elapsed))
+        #my_test.display_summary(summary)
+
+
+    def test_find_peak_valley_2(self):
+        size=10
+        high=10
+        low = (-1)*high
+        data_hash = data_generator.create_random_number_array(low=low, high=high, size=size)
+        arr = data_hash['array_']
+        answer = find_peak_valley_2(arr, debug=1, thresh=-1)
+
+
+    def test_find_peak_valley_correctness(self):
         size=500
         high=100
         low = (-1)*high
         jj = 0
-        while jj < 10:
+        debug = 1
+        while jj < 1:
             data_hash = data_generator.create_random_number_array(low=low, high=high, size=size)
             data = data_hash['array_']
             #data = [9,-5,7,-5,6,10,7,-1,3,4]
             #data = [14, 27, 29, 29, 9, 1, -1, -1, 23]
             #data = [45, 26, 4, -46, -99, -25, 25, -40, -40, 17]
             #data = [29, -25,  50,  50, -10,  19, 44]
+            data = [-5, 1, -1, -6, -5, -5, -3, -7, -4, -6]
             data = np.array(data)
             #print(data.tolist())
-            peak_index_1, valley_index_1 = find_peak_valley_1(data)
-            peak_index_2, valley_index_2 = find_peak_valley_2(data)
-            #print(f'{jj}, peak_index_1\n{peak_index_1}')
-            #print(f'{jj}, peak_index_2\n{peak_index_2.tolist()}')
+            peak_index_1, valley_index_1 = find_peak_valley_1(data, debug=debug)
+            peak_index_2, valley_index_2 = find_peak_valley_2(data, debug=debug)
             print(f'jj = {jj}')
-            #print(f'{jj}, valley_index_1: {valley_index_1}')
-            #print(f'{jj}, valley_index_2: {valley_index_2.tolist()}')
+            if debug:
+                print(f'{jj}, peak_index_1: {peak_index_1}')
+                print(f'{jj}, peak_index_2: {peak_index_2.tolist()}')
+                print(f'{jj}, valley_index_1: {valley_index_1}')
+                print(f'{jj}, valley_index_2: {valley_index_2.tolist()}')
             assert peak_index_1 == peak_index_2.tolist()
             assert valley_index_1 == valley_index_2.tolist()
             jj += 1
