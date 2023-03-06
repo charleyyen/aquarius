@@ -17,7 +17,7 @@ def display_summary(summary):
         while len(str(answer)) < longest:
             answer = ' ' +  answer
 
-        print(f'{j}, {name} - {answer}: Time Consumed: {tuple_[2]}')
+        print(f'{j}, {name} - {answer:,}: Time Consumed: {tuple_[2]}')
 
 """
 def get_summary(solution_list, module_name, arr):
