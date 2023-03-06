@@ -136,7 +136,7 @@ def solution_4_66_100_40(N, A):
 
 
 # ---------------------------------------------------------------
-# I new the implementation below would fail the performance test.
+# I knew the implementation below would fail the performance test.
 # But I did not expected it scored ZERO, because it failed the
 # performance test on EVERY sigle case!!
 # ---------------------------------------------------------------
