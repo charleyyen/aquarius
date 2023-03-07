@@ -167,7 +167,7 @@ def solution(N, A):
     The only difference is that when i > N, we save the maximum instead of assigning
     it to arr (arr = [maximum]). By doing so, it passed the performance test.
     """
-    arr = [0]*(N)
+    arr = [0]*(N) # To hold the max value. This idea is also used in L09_MaxDoubleSliceSum_m_golden_slice.py
     minimum = maximum = 0
     for i in A:
         if i > N:

@@ -99,6 +99,11 @@ def solution_mine_01(array_):
 
 def solution_mine_02(array_):
     # Score 100%
+
+    #--------------------------------------------------
+    # Declare the following two lists: left and right,
+    # which are used to hold the max value. This method
+    # is similar to L04_MaxCounters_m.py
     left, right = [0]*len(array_), [0]*len(array_)
     left_sum = 0
     for i, value in enumerate(array_[1:], start=1):
