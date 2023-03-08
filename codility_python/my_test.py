@@ -1,13 +1,11 @@
 def display_summary(summary):
-    largest = 0
     longest_name = 0
+    longest = 0
     for tuple_ in summary:
         if longest_name < len(tuple_[0]):
             longest_name = len(tuple_[0])
-        if largest < tuple_[1]:
-            largest = tuple_[1]
+        longest = max(longest, len(str(tuple_[1])))
 
-    longest = len(str(largest))
     for j, tuple_ in enumerate(summary, start=1):
         name = tuple_[0]
         while len(name) < longest_name:
@@ -17,7 +15,12 @@ def display_summary(summary):
         while len(str(answer)) < longest:
             answer = ' ' +  answer
 
-        print(f'{j}, {name} - {answer:,}: Time Consumed: {tuple_[2]}')
+        if isinstance(answer, bool):
+            print(f'{j}, {name} - {answer}: Time Consumed: {tuple_[2]}')
+        elif isinstance(answer, int):
+            print(f'{j}, {name} - {answer:,}: Time Consumed: {tuple_[2]}')
+        else:
+            print(f'{j}, {name} - {answer}: Time Consumed: {tuple_[2]}')
 
 """
 def get_summary(solution_list, module_name, arr):
