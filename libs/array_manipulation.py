@@ -52,7 +52,7 @@ def split_list_by_value_2(value, data_list, more_or_less=0):
 
 def find_peak_valley_1(arr, thresh=0, debug=False):
     """
-    While this method finction-wise is correct, the performance is UNACCEPTABLE.
+    While this method function-wise is correct, the performance is UNACCEPTABLE.
     For example, when
         size=100_000
         high=10_000
