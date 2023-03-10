@@ -1,11 +1,14 @@
 import data_generator # in house
 from aquarius.codility_python import my_test # in house
 
+import inspect
 import random
+import tempfile
 import time
 from array import *
 
-from scipy.signal import find_peaks # find_peak_valley
+#from scipy.signal import find_peaks # find_peak_valley
+import scipy.signal #import find_peaks # find_peak_valley
 import numpy as np # find_peak_valley
 import matplotlib.pyplot as plt # find_peak_valley
 
@@ -50,81 +53,68 @@ def split_list_by_value_2(value, data_list, more_or_less=0):
                 chunk.append(val)
     yield chunk
 
-def find_peak_valley_1(arr, thresh=0, debug=False):
-    """
-    While this method function-wise is correct, the performance is UNACCEPTABLE.
-    For example, when
-        size=100_000
-        high=10_000
-        low = (-1)*high
-        data_hash = data_generator.create_random_number_array(low=low, high=high, size=size)
-    Below is the performance test results from test_find_peak_valley_performance()
-        array_manipulation.py Array length in test: 100000
-        find_peak_valley_1 29190 29294 446.4591
-        find_peak_valley_2 29190 29294 0.0033
-    """
-    peak = min(arr) - 1
-    valley = max(arr) + 1
-    peak_index_value = {}
-    valley_index_value = {}
-    starting_index = 1
-    j = k = 0
-    for i, value in enumerate(arr[starting_index:], start=starting_index):
-        if peak == value:
-            if j == 0:
-                j = i - 1
-        elif peak < value:
-            #print(f'A. i: {i}, peak: {peak}, value: {value}, arr[{i-1}]: {arr[i-1]}')
-            if value >= thresh:
-                peak = value
-            #print(f'A. ==-->>i: {i}, peak: {peak}, value: {value}, arr[{i-1}]: {arr[i-1]}')
-        else: #peak > value
-            if peak > arr[i-2]:
-                #print(f'==-->> i: {i}, j: {j}, peak: {peak}, value: {value}, arr[{i-1}]: {arr[i-1]}')
-                peak_index_value[i-1] = arr[i-1]
-            elif peak == arr[i-2] and j > 0 and peak > arr[j-1]:
-                #print(f'##==-->> i: {i}, j: {j}, peak: {peak}, value: {value}, arr[{i-1}]: {arr[i-1]}')
-                peak_index_value[j] = arr[j]
-            peak = min(arr) - 1
-            j = 0
 
-        if valley == value:
-            if k == 0:
-                k = i - 1
-        elif valley > value:
-            #print(f'A. i: {i}, valley: {valley}, value: {value}, arr[{i-1}]: {arr[i-1]}')
-            if value <= thresh:
-                valley = value
-            #print(f'B. i: {i}, valley: {valley}, value: {value}, arr[{i-1}]: {arr[i-1]}')
-        else: #  valley < value:
-            #print(f'C. i: {i}, valley: {valley}, value: {value}, arr[{i-1}]: {arr[i-1]}')
-            ##print(f'i: {i}, valley: {valley}, value: {value}, arr[{i-1}]: {arr[i-1]}')
-            if valley < arr[i-2]:
-                valley_index_value[i-1] = arr[i-1]
-                #print(f'==-->> i: {i}, valley: {valley}, value: {value}, arr[{i-1}]: {arr[i-1]}')
-            elif valley == arr[i-2] and k > 0 and valley < arr[k-1]:
-                valley_index_value[k] = arr[k]
-                #print(f'##==-->> i: {i}, k: {k}, valley: {valley}, value: {value}, arr[{i-1}]: {arr[i-1]}')
-            #print(f'D. i: {i}, valley: {valley}, value: {value}, arr[{i-1}]: {arr[i-1]}')
-            valley = max(arr) + 1
-            k = 0
+def find_peaks(data, height=0):
+    # Intentionally mock scipy.signal.find_peaks() when height is set
+    function_name = inspect.currentframe().f_code.co_name
+    peak_indices, peak_values = [], []
+    possible_peak_index = -1
+    if height is None:
+        print(f'In function_name(): Height is {height}. TBI')
+    else:
+        for index in range(1, len(data) - 1):
+            if data[index] >= height:
+                if data[index] > data[index - 1]:
+                    if data[index] > data[index + 1]:
+                        peak_indices.append(index)
+                        peak_values.append(data[index])
+                    elif data[index] == data[index + 1]:
+                        possible_peak_index = index
+                elif data[index] == data[index - 1]:
+                    if data[index] > data[index + 1] and possible_peak_index > -1:
+                        new_index = (index + possible_peak_index)//2
+                        peak_indices.append(new_index)
+                        peak_values.append(data[new_index])
+                        possible_peak_index = -1
 
-    return sorted(peak_index_value.keys()), sorted(valley_index_value.keys())
+    return peak_indices, peak_values
+
+
+def find_peak_valley_1(data, thresh=0, valley_included=False, debug=False):
+    # This method is intentionally mocked find_peak_valley_2 with one key difference:
+    # it does not call scipy.signal.find_peaks, because codility.com does not accept
+    # scipy.py module
+    function_name = inspect.currentframe().f_code.co_name
+    if debug:
+        print(f'In {function_name}(), data type: {type(data)}')
+        print(f'A. data: {data}')
+
+    if isinstance(data, list):
+        data = np.array(data)
+
+    peak_indices, peak_values = find_peaks(data, height=thresh)
+    if valley_included:
+        valley_indices, valley_values = find_peaks(-data, height=thresh)
+        return peak_indices, peak_values, valley_indices, -(np.array(valley_values))
+    return peak_indices, peak_values, None, None
 
 
 def find_peak_valley_2(data, thresh=0, debug=False):
-    peak_idx, peak = find_peaks(data, height=thresh)
-    valley_idx, valley = find_peaks(-data, height=thresh)
-    data = [-5, 1, -1, -6, -5, -5, -3, -7, -4, -6]
-    data = np.array(data)
-    thresh = 0
+    function_name = inspect.currentframe().f_code.co_name
+    if debug:
+        print(f'\nIn {function_name}()')
+    if isinstance(data, list):
+        data = np.array(data)
+
+    peak_idx, peak = scipy.signal.find_peaks(data, height=thresh)
+    valley_idx, valley = scipy.signal.find_peaks(-data, height=thresh)
     if debug:
         print(f'thresh: {thresh}\n{data}\n{data.tolist()}')
-        #print(f'peak type: {type(peak)}, length: {len(peak)}\n{peak_idx}\n{peak}')
-        print(f'peak_idx: {peak_idx}\npeak value: {peak}')
-        #print(f'valley type: {type(valley)}, length: {len(valley)}\n{valley_idx}\n{valley}')
-        print(f'valley_idx: {valley_idx}\nvalley value: {valley}')
-    return peak_idx, valley_idx
+        print(f'peak type: {type(peak)}, length: {len(peak)}\n{peak_idx}\n{peak}')
+        print(f'==-->>peak_idx: {peak_idx}\npeak value: {peak}')
+        print(f'valley type: {type(valley)}, length: {len(valley)}\n{valley_idx}\n{valley}')
+        print(f'==-->>valley_idx: {valley_idx}\nvalley value: {valley}')
+    return peak_idx, peak, valley_idx, valley
 
 
 def find_peak_valley_ref(debug=False):
@@ -139,10 +129,10 @@ def find_peak_valley_ref(debug=False):
     thresh = 0
 
     # Find indices of peaks
-    peak_idx, _ = find_peaks(series, height=thresh)
+    peak_idx, _ = scipy.signal.find_peaks(series, height=thresh)
 
     # Find indices of valleys (from inverting the signal)
-    valley_idx, _ = find_peaks(-series, height=thresh)
+    valley_idx, _ = scipy.signal.find_peaks(-series, height=thresh)
     print(f'peak_idx type: {type(peak_idx)}, length: {len(peak_idx)}\n{peak_idx}')
     if debug:
         # Plot signal
@@ -192,58 +182,50 @@ class TestArrayManipulation:
         print(f'B. split_list_by_value_2(): Total run time: {round((time.time() - start), 3)}')
         assert len(blocks2) == len(blocks1)
 
-    def test_find_peak_valley_performance(self):
-        size=1000
-        high=100
+    def test_find_peak_valley(self):
+        size=100_000
+        high=10_000
         low = (-1)*high
-        data_hash = data_generator.create_random_number_array(low=low, high=high, size=size)
-        arr = data_hash['array_']
-        solution_list = [find_peak_valley_1, find_peak_valley_2]
-        print(f'Array length in test: {len(arr)}')
-        summary = []
-        for j, solution in enumerate(solution_list, start=1):
-            method = str(solution).split()[1]
-            start = time.time()
-            answer = solution(arr)
-            elapsed = round(time.time() - start, 4)
-            print(method, len(answer[0]), len(answer[1]), elapsed)
-            #summary.append((method, answer, elapsed))
-        #my_test.display_summary(summary)
+        loop = 20
+        i = 0
+        while i < loop:
+            #temp_dir = tempfile.TemporaryDirectory()
+            #source_data = temp_dir.name + "/source_data.txt"
+            source_data = f"/tmp/source_data_{i}.txt"
 
-
-    def test_find_peak_valley_2(self):
-        size=10
-        high=10
-        low = (-1)*high
-        data_hash = data_generator.create_random_number_array(low=low, high=high, size=size)
-        arr = data_hash['array_']
-        answer = find_peak_valley_2(arr, debug=1, thresh=-1)
-
-
-    def test_find_peak_valley_correctness(self):
-        size=500
-        high=100
-        low = (-1)*high
-        jj = 0
-        debug = 1
-        while jj < 1:
             data_hash = data_generator.create_random_number_array(low=low, high=high, size=size)
-            data = data_hash['array_']
-            #data = [9,-5,7,-5,6,10,7,-1,3,4]
-            #data = [14, 27, 29, 29, 9, 1, -1, -1, 23]
-            #data = [45, 26, 4, -46, -99, -25, 25, -40, -40, 17]
-            #data = [29, -25,  50,  50, -10,  19, 44]
-            data = [-5, 1, -1, -6, -5, -5, -3, -7, -4, -6]
-            data = np.array(data)
-            #print(data.tolist())
-            peak_index_1, valley_index_1 = find_peak_valley_1(data, debug=debug)
-            peak_index_2, valley_index_2 = find_peak_valley_2(data, debug=debug)
-            print(f'jj = {jj}')
-            if debug:
-                print(f'{jj}, peak_index_1: {peak_index_1}')
-                print(f'{jj}, peak_index_2: {peak_index_2.tolist()}')
-                print(f'{jj}, valley_index_1: {valley_index_1}')
-                print(f'{jj}, valley_index_2: {valley_index_2.tolist()}')
-            assert peak_index_1 == peak_index_2.tolist()
-            assert valley_index_1 == valley_index_2.tolist()
-            jj += 1
+            arr = data_hash['array_']
+            print(f'Array length in test: {len(arr):,}, source_data: {source_data}')
+
+            with open(source_data, "w") as file_handle:
+                file_handle.write(",".join(map(str, arr.tolist())))
+                file_handle.write("\n")
+
+            start = time.time()
+            thresh = 0
+            if thresh is None:
+                answer_1 = find_peak_valley_1(arr, thresh=thresh)
+            else:
+                answer_1 = find_peak_valley_1(arr, valley_included=True, thresh=thresh)
+                elapsed = round(time.time() - start, 4)
+                print(f'find_peak_valley_1: Peak Counts: {len(answer_1[0]):,}', end='') 
+                print(f', Valley Counts: {len(answer_1[2]):,}, Time Consumed: {elapsed}')
+
+            start = time.time()
+            answer_2 = find_peak_valley_2(arr)
+            elapsed = round(time.time() - start, 4)
+
+            print(f'find_peak_valley_2: Peak Counts: {len(answer_2[0]):,}', end='')
+            print(f', Valley Counts: {len(answer_2[2]):,}, Time Consumed: {elapsed}')
+            print()
+
+            i += 1
+
+            if thresh is not None:
+                assert len(answer_1[0]) == len(answer_2[0]), \
+                        f'Peak Indices Mismatch!! Check source data used in this test: {source_data}\n\n'
+                assert len(answer_1[2]) == len(answer_2[2]), \
+                        f'Valley Indices Mismatch!! Check source data used in this test: {source_data}\n\n'
+
+            # use temp_dir, and when done:
+            #temp_dir.cleanup()
