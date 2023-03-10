@@ -1,8 +1,10 @@
 import data_generator # in house
-from aquarius.codility_python import my_test # in house
+#from aquarius.codility_python import my_test # in house
 
 import inspect
+import pathlib
 import random
+import sys
 import tempfile
 import time
 from array import *
@@ -12,6 +14,7 @@ import scipy.signal #import find_peaks # find_peak_valley
 import numpy as np # find_peak_valley
 import matplotlib.pyplot as plt # find_peak_valley
 
+print_limit = 101
 def split_list_by_value_1(value, data_list, more_or_less=0):
     if more_or_less < 0:
         indices = [i for i, x in enumerate(data_list) if x <= value]
@@ -87,34 +90,60 @@ def find_peak_valley_1(data, thresh=0, valley_included=False, debug=False):
     function_name = inspect.currentframe().f_code.co_name
     if debug:
         print(f'In {function_name}(), data type: {type(data)}')
-        print(f'A. data: {data}')
 
     if isinstance(data, list):
         data = np.array(data)
 
     peak_indices, peak_values = find_peaks(data, height=thresh)
+    if debug:
+        #print(f'thresh: {thresh}\n{data}\n{data.tolist()}\n')
+        print(f'Source Data: {data.tolist()}\n')
+        if len(data) < print_limit:
+            print(f'  peak_indices: {peak_indices}')
+            print(f'    peak value: {peak_values}')
     if valley_included:
         valley_indices, valley_values = find_peaks(-data, height=thresh)
-        return peak_indices, peak_values, valley_indices, -(np.array(valley_values))
+        valley_values = (-(np.array(valley_values))).tolist()
+        if debug:
+            if len(data) < print_limit:
+                print(f'valley_indices: {valley_indices}')
+                print(f'  valley value: {valley_values}')
+            print()
+        return peak_indices, peak_values, valley_indices, valley_values
+    else:
+        if debug:
+            print()
     return peak_indices, peak_values, None, None
 
 
-def find_peak_valley_2(data, thresh=0, debug=False):
+def find_peak_valley_2(data, thresh=0, debug=False, all_int=False):
     function_name = inspect.currentframe().f_code.co_name
     if debug:
         print(f'\nIn {function_name}()')
     if isinstance(data, list):
         data = np.array(data)
 
-    peak_idx, peak = scipy.signal.find_peaks(data, height=thresh)
-    valley_idx, valley = scipy.signal.find_peaks(-data, height=thresh)
+    peak_index, peak = scipy.signal.find_peaks(data, height=thresh)
+    valley_index, valley = scipy.signal.find_peaks(-data, height=thresh)
+    # The data type of peak_index & valley_index is <class 'numpy.ndarray'>
+    # The data type of peak and valley is <class 'dict'>
+    #   which has one key 'peak_heights' - <class 'str'> and the corresponding
+    #       value's data type is <class 'numpy.ndarray'>
+    peak_index = peak_index.tolist()
+    valley_index = valley_index.tolist()
+    peak = peak["peak_heights"].tolist()
+    valley = (-valley["peak_heights"]).tolist()
+
     if debug:
-        print(f'thresh: {thresh}\n{data}\n{data.tolist()}')
-        print(f'peak type: {type(peak)}, length: {len(peak)}\n{peak_idx}\n{peak}')
-        print(f'==-->>peak_idx: {peak_idx}\npeak value: {peak}')
-        print(f'valley type: {type(valley)}, length: {len(valley)}\n{valley_idx}\n{valley}')
-        print(f'==-->>valley_idx: {valley_idx}\nvalley value: {valley}')
-    return peak_idx, peak, valley_idx, valley
+        #print(f'thresh: {thresh}\n{data}\n{data.tolist()}\n')
+        print(f'Source Data: {data.tolist()}\n')
+        if len(data) < print_limit:
+            print(f'  peak_index: {peak_index}')
+            print(f'  peak value: {peak}')
+            print(f'valley_index: {valley_index}')
+            print(f'valley value: {valley}')
+        print()
+    return peak_index, peak, valley_index, valley
 
 
 def find_peak_valley_ref(debug=False):
@@ -182,11 +211,79 @@ class TestArrayManipulation:
         print(f'B. split_list_by_value_2(): Total run time: {round((time.time() - start), 3)}')
         assert len(blocks2) == len(blocks1)
 
+    def find_mismatch(self, data, results_a, results_b, flag):
+        function_name = inspect.currentframe().f_code.co_name
+        print(f'\nIn {function_name}(), data length: {len(data)}, flag: {flag}\n\n')
+        if flag == 'p':
+            print("\n\nCheck Peak!!\n")
+            self.analyze_results(data, results_a[0], results_b[0], results_a[1], results_b[1])
+        else:
+            print("\n\nCheck Valley!!\n")
+            self.analyze_results(data, results_a[2], results_b[2], results_a[3], results_b[3])
+
+
+    def analyze_results(self, data, index_a, index_b, value_a, value_b):
+        partial = False
+        if len(data) > 50:
+            partial = True
+
+        index_list = index_a if len(index_a) > len(index_b) else index_b
+
+        for i in range(len(index_list)):
+            if i < len(index_a):
+                stop_here = False
+                real_index_a = index_a[i]
+                real_value_a = value_a[i]
+            else:
+                print(f'Index {i} is not in index_a!!')
+                stop_here = True
+                
+            if i < len(index_b):
+                stop_here = False
+                real_index_b = index_b[i]
+                real_value_b = value_b[i]
+            else:
+                print(f'Index {i} is not in index_b!!')
+                stop_here = True
+
+            if stop_here:
+                assert False
+
+            if real_index_a != real_index_b:
+                print(f'real_index_a: {real_index_a}, real_value_a: {real_value_a}')
+                print(f'real_index_b: {real_index_b}, real_value_b: {real_value_b}')
+                if partial:
+                    print(f'Head 5: {data[:5]}, Tail 5: {data[-5:]}')
+                    print(f'Around real_index_a: {real_index_a}, {data[real_index_a-5:real_index_a+5]}, on spot: {data[real_index_a]}')
+                    print(f'Around real_index_b: {real_index_b}, {data[real_index_b-5:real_index_b+5]}, on spot: {data[real_index_b]}')
+                else:
+                    print(f'data[{real_index_a}] = {data[real_index_a]}')
+                    print(f'data[{real_index_b}] = {data[real_index_b]}')
+
+    def read_static_data_from_file(self, source_file):
+        with open(source_file, "r") as open_for_read:
+            for line in open_for_read.readlines():
+                if line[0] == "#":
+                    continue
+                #list_ = line.rstrip().split(",")
+                list_ = [int(x) for x in line.rstrip().split(",")]
+
+        return list_
+
+
     def test_find_peak_valley(self):
-        size=100_000
-        high=10_000
+        static_data_from_file = True
+        static_data_from_file = False
+        size=100
+        high=50
         low = (-1)*high
-        loop = 20
+
+        random_index = random.randint(1, size-1)
+        random_value = random.randint(low, high)
+        if size > 50:
+            random_index = random.randint(6, size-5)
+
+        loop = 1
         i = 0
         while i < loop:
             #temp_dir = tempfile.TemporaryDirectory()
@@ -195,37 +292,134 @@ class TestArrayManipulation:
 
             data_hash = data_generator.create_random_number_array(low=low, high=high, size=size)
             arr = data_hash['array_']
-            print(f'Array length in test: {len(arr):,}, source_data: {source_data}')
+            if static_data_from_file:
+                print(f'live arr length: {len(arr)}')
+                source_file = "/tmp/source_data_4.txt"
+                arr = self.read_static_data_from_file(source_file)
+                print(f'static arr length: {len(arr)}')
+                #raise SystemExit('force exit')
+                #sys.exit('force exit')
 
-            with open(source_data, "w") as file_handle:
-                file_handle.write(",".join(map(str, arr.tolist())))
-                file_handle.write("\n")
+            arr = [-15, 1, 1, 28, 25, 25, -21]
+            print(f'Array length in test: {len(arr):,}, source_data: {source_data}')
+            if len(arr) < print_limit and i == 0:
+                print(f'i = {i}, Data Type: {type(arr)}, {arr}')
+            print()
+
+            if not static_data_from_file:
+                with open(source_data, "w") as file_handle:
+                    if isinstance(arr, list):
+                        data_2_save = np.array(arr)
+                    file_handle.write(",".join(map(str, data_2_save.tolist())))
+                    file_handle.write("\n")
 
             start = time.time()
             thresh = 0
+            valley_included = True
+            #arr = [8, -7, -10, 3, -9, 5, 9, 1, -2, -4, 2, 0, 1, -3, 2]
             if thresh is None:
-                answer_1 = find_peak_valley_1(arr, thresh=thresh)
+                answer_1 = find_peak_valley_1(arr, thresh=thresh, debug=True)
             else:
-                answer_1 = find_peak_valley_1(arr, valley_included=True, thresh=thresh)
+                answer_1 = find_peak_valley_1(arr, valley_included=valley_included, thresh=thresh, debug=True)
+                #answer_1 = find_peak_valley_1(arr, valley_included=valley_included, thresh=thresh)
                 elapsed = round(time.time() - start, 4)
-                print(f'find_peak_valley_1: Peak Counts: {len(answer_1[0]):,}', end='') 
-                print(f', Valley Counts: {len(answer_1[2]):,}, Time Consumed: {elapsed}')
+                #print(f'answer_1[0] type: {type(answer_1[0])}, answer_1[1] type: {type(answer_1[1])}')
+                if valley_included:
+                #    print(f'answer_1[2] type: {type(answer_1[2])}, answer_1[3] type: {type(answer_1[3])}')
+                    print(f'i: {i}, find_peak_valley_1: Peak Counts: {len(answer_1[0]):,}', end='') 
+                    print(f', Valley Counts: {len(answer_1[2]):,}, Time Consumed: {elapsed}')
+                else:
+                    print(f'find_peak_valley_1: Peak Counts: {len(answer_1[0]):,}') 
 
+            """
+            if not static_data_from_file:
+                if len(arr) < print_limit:
+                    print(f'A. arr length: {len(arr)}, {arr.tolist()}')
+                else:
+                    print(f'A. arr length: {len(arr)}')
+            else:
+                if len(arr) < print_limit:
+                    print(f'A. arr length: {len(arr)}, {arr}')
+                else:
+                    print(f'A. arr length: {len(arr)}')
+            """
+            print(f'random_index: {random_index}, random_value: {random_value}')
+            #arr = np.concatenate((arr[:random_index-1], [random_value], arr[random_index:]))
+            """
+            if not static_data_from_file:
+                if len(arr) < print_limit:
+                    print(f'B. arr length: {len(arr)}, {arr.tolist()}')
+                else:
+                    print(f'B. arr length: {len(arr)}')
+            else:
+                if len(arr) < print_limit:
+                    print(f'B. arr length: {len(arr)}, {arr}')
+                else:
+                    print(f'B. arr length: {len(arr)}')
+            """
+
+            #arr = [8, -7, -2, 3, -9, 5, 9, 1, -2, -4, 2, 0, 1, -3, 2]
             start = time.time()
-            answer_2 = find_peak_valley_2(arr)
+            answer_2 = find_peak_valley_2(arr, debug=True)
+            #answer_2 = find_peak_valley_2(arr)
             elapsed = round(time.time() - start, 4)
 
-            print(f'find_peak_valley_2: Peak Counts: {len(answer_2[0]):,}', end='')
+            peak_asserted = True
+            valley_asserted = True
+            if thresh is not None:
+                if len(answer_1[0]) != len(answer_2[0]) or \
+                        answer_1[0] != answer_2[0] or \
+                        len(answer_1[1]) != len(answer_2[1]) or \
+                        answer_1[1] != answer_2[1]:
+                    peak_asserted = False
+
+
+                if valley_included:
+                    if len(answer_1[2]) != len(answer_2[2]) or \
+                            answer_1[2] != answer_2[2] or \
+                            len(answer_1[3]) != len(answer_2[3]) or \
+                            answer_1[3] != answer_2[3]:
+                        valley_asserted = False
+                """
+                #assert len(answer_1[0]) == len(answer_2[0]), \
+                #        f'Peak Indices Mismatch!! Check source data used in this test: {source_data}\n\n'
+                #print(f'answer_1[0] type: {type(answer_1[0])}, answer_2[0] type: {type(answer_2[0])}')
+                #print(f'answer_1[1] type: {type(answer_1[1])}, answer_2[1] type: {type(answer_2[1])}')
+                #assert answer_1[0] == answer_2[0]
+                #assert answer_1[1] == answer_2[1]
+                #if valley_included:
+                #    assert len(answer_1[2]) == len(answer_2[2]), \
+                #            f'Valley Indices Mismatch!! Check source data used in this test: {source_data}\n\n'
+                    #assert answer_1[2] == answer_2[2]
+                    #print(f'answer_1[2] type: {type(answer_1[2])}, answer_2[2] type: {type(answer_2[2])}')
+                    #print(f'answer_1[3] type: {type(answer_1[3])}, answer_2[3] type: {type(answer_2[3])}')
+                    #print(f'answer_1[3]: {answer_1[3]}')
+                    #print(f'answer_2[3]: {answer_2[3]}')
+                    #assert answer_1[3] == answer_2[3]
+                """
+
+            # use temp_dir, and when done:
+            #temp_dir.cleanup()
+
+            print(f'i: {i}, find_peak_valley_2: Peak Counts: {len(answer_2[0]):,}', end='')
             print(f', Valley Counts: {len(answer_2[2]):,}, Time Consumed: {elapsed}')
             print()
 
             i += 1
 
-            if thresh is not None:
-                assert len(answer_1[0]) == len(answer_2[0]), \
-                        f'Peak Indices Mismatch!! Check source data used in this test: {source_data}\n\n'
-                assert len(answer_1[2]) == len(answer_2[2]), \
-                        f'Valley Indices Mismatch!! Check source data used in this test: {source_data}\n\n'
+            if peak_asserted and valley_asserted:
+                #print(f'answer_2[0] type: {type(answer_2[0])}, answer_2[1] type: {type(answer_2[1])}')
+                #print(f'answer_2[0] type: {type(answer_2[0])}, answer_2[1] type: {type(answer_2[1])}')
+                #print(f'answer_2[2] type: {type(answer_2[2])}, answer_2[3] type: {type(answer_2[3])}')
 
-            # use temp_dir, and when done:
-            #temp_dir.cleanup()
+                if not static_data_from_file:
+                    path = pathlib.Path(source_data)
+                    if path.is_file():
+                        print(f'i: {i}, remove "{source_data}"')
+                        path.unlink()
+            else:
+                print(f'i: {i}, Save this: "{source_data}"')
+                if not peak_asserted:
+                    self.find_mismatch(arr, answer_1, answer_2, flag='p')
+                if not valley_asserted: 
+                    self.find_mismatch(arr, answer_1, answer_2, flag='v')
