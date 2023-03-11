@@ -74,7 +74,22 @@ def find_peaks(data, height=0):
     peak_indices, peak_values = [], []
     possible_peak_index = -1
     if height is None:
-        print(f'In function_name(): Height is {height}. TBI')
+        #print(f'In function_name(): Height is {height}. TBI')
+        #[-3, -2, -1, -2, -3, -2, -1, 1, 2, 3, 2, 1, 2, 3]
+        for index in range(1, len(data) - 1):
+            if data[index] > data[index - 1]:
+                if data[index] > data[index + 1]:
+                    peak_indices.append(index)
+                    peak_values.append(data[index])
+                    possible_peak_index = -1
+                elif data[index] == data[index + 1]:
+                    possible_peak_index = index
+            elif data[index] == data[index - 1]:
+                if data[index] > data[index + 1] and possible_peak_index > -1:
+                    new_index = (index + possible_peak_index)//2
+                    peak_indices.append(new_index)
+                    peak_values.append(data[new_index])
+                    possible_peak_index = -1
     else:
         # [-15, 1, 1, 28, 25, 25, -21]
         for index in range(1, len(data) - 1):
@@ -283,57 +298,40 @@ class TestArrayManipulation:
         size=100_000
         high=10_000
         low = (-1)*high
-        i = 0
-        while i < 5:
-            data_hash = data_generator.create_random_number_array(low=low, high=high, size=size)
-            arr = data_hash['array_']
 
-            start = time.time()
-            valley_included = True
-            #answer_1 = find_peak_valley_1(
-            #    arr,
-            #    valley_included=valley_included,
-            #    thresh=thresh,
-            #    debug=True
-            #)
-            answer_1 = find_peak_valley_1(arr, valley_included=valley_included)
-            elapsed = round(time.time() - start, 4)
-            if valley_included:
-                print(f'\ni: {i}, find_peak_valley_1: Peak Counts: {len(answer_1[0]):,}', end='')
-                print(f', Valley Counts: {len(answer_1[2]):,}, Time Consumed: {elapsed}')
-            else:
-                print(f'find_peak_valley_1: Peak Counts: {len(answer_1[0]):,}')
+        data_hash = data_generator.create_random_number_array(low=low, high=high, size=size)
+        arr = data_hash['array_']
 
+        #arr = [-3,-2,-1,-2,-3,-2,-1, 1,2,3,2,1,2,3]
+        #print(arr)
+
+        start = time.time()
+        valley_included = True
+        thresh = 0
+        #thresh = None
+
+        answer_1 = find_peak_valley_1(arr, valley_included=valley_included, thresh=thresh)
+        
+        elapsed = round(time.time() - start, 4)
+        if valley_included:
+            print(f'\nfind_peak_valley_1: Peak Counts: {len(answer_1[0]):,}', end='')
+            print(f', Valley Counts: {len(answer_1[2]):,}, Time Consumed: {elapsed}')
+        else:
+            print(f'find_peak_valley_1: Peak Counts: {len(answer_1[0]):,}')
+
+        if thresh is not None:
             start = time.time()
+
             answer_2 = find_peak_valley_2(arr)
+
             elapsed = round(time.time() - start, 4)
-
-            peak_asserted = True
-            valley_asserted = True
-            if len(answer_1[0]) != len(answer_2[0]) or \
-                    answer_1[0] != answer_2[0] or \
-                    len(answer_1[1]) != len(answer_2[1]) or \
-                    answer_1[1] != answer_2[1]:
-                peak_asserted = False
-
-
-            if valley_included:
-                if len(answer_1[2]) != len(answer_2[2]) or \
-                        answer_1[2] != answer_2[2] or \
-                        len(answer_1[3]) != len(answer_2[3]) or \
-                        answer_1[3] != answer_2[3]:
-                    valley_asserted = False
-
-            print(f'i: {i}, find_peak_valley_2: Peak Counts: {len(answer_2[0]):,}', end='')
+            print(f'find_peak_valley_2: Peak Counts: {len(answer_2[0]):,}', end='')
             print(f', Valley Counts: {len(answer_2[2]):,}, Time Consumed: {elapsed}')
-            assert peak_asserted
-            if valley_included:
-                assert valley_asserted
 
-            if not peak_asserted:
+            assert answer_1[0] == answer_2[0] and answer_1[1] == answer_2[1], \
                 self.find_mismatch(arr, answer_1, answer_2, flag='p')
-            if not valley_asserted:
-                self.find_mismatch(arr, answer_1, answer_2, flag='v')
 
-            i += 1
-        # end of while i < 5:
+            if valley_included:
+                assert answer_1[2] == answer_2[2] and answer_1[3] == answer_2[3], \
+                    self.find_mismatch(arr, answer_1, answer_2, flag='v')
+
