@@ -13,6 +13,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+site_list = ('indeed.com', 'LinkedIn')
 class CvGenerator:
     """A class designed to parse a full patient test's serial console outputs"""
     # pylint: disable=too-many-instance-attributes
@@ -64,19 +65,29 @@ class CvGenerator:
         except FileNotFoundError:
             print(f'File "{self.input_file}" does not exist!')
         else:
-            self.archived_list
             with open(self.input_file, "r") as open_for_read:
+                site_name = None
                 for line in open_for_read.readlines():
-                    if "https" in line or line[0] == "#" or len(line.strip()) == 0:
+                    if line[0] == "#" or len(line.strip()) == 0:
+                        continue
+                    if "https" in line:
+                        for site in site_list:
+                            if site.lower() in line:
+                                site_name = site
                         continue
 
                     list_ = line.rstrip().split(",")
                     #print(f'Length: {len(list_)}, #{list_}#\n{line}\n')
-                    assert len(list_) == 3
+                    assert len(list_) == 2
                     key_name = "_".join(list_[1].strip().split())
                     new_cover_letter = self.archived_dir + self.date_for_file_prefix + "_" + key_name.lower() + ".txt"
+                    new_cover_letter_pdf = new_cover_letter.replace("txt", "pdf")
+                    print(f'##==-->>new_cover_letter PDF: {new_cover_letter.replace("txt", "pdf")}')
                     if self.applied_already(key_name):
                         continue
+
+                    assert site_name
+                    list_.append(site_name)
 
                     print(f'new_cover_letter TXT: {new_cover_letter}')
                     file_handle = open(new_cover_letter, "w")
@@ -93,10 +104,19 @@ class CvGenerator:
                     file_handle.close()
 
                     command = f"libreoffice --convert-to pdf --outdir {self.archived_dir} {new_cover_letter}"
-                    subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
-                    time.sleep(1)
-                    #os.remove(new_cover_letter)
-                    print(f'new_cover_letter PDF: {new_cover_letter.replace("txt", "pdf")}')
+                    child = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
+                    streamdata = child.communicate()[0]
+                    loop = 0
+                    while child.returncode != 0 and loop < 3:
+                        child = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
+                        streamdata = child.communicate()[0]
+                        print(f'child.returncode: {child.returncode}')
+                        time.sleep(1)
+                        loop += 1
+                    if os.path.isfile(new_cover_letter_pdf):
+                        print(f'new_cover_letter PDF: {new_cover_letter.replace("txt", "pdf")}')
+                    else:
+                        print(f'Failed to create {new_cover_letter_pdf}')
 
 
     def parse_command_line(self, argv):
