@@ -2,6 +2,35 @@ import numpy as np
 import random
 import string
 
+def create_random_number_array_withiout_same_neibour(
+        low:int=1,
+        high:int=1000000,
+        size:int=10000000,
+        dimension:int=0,
+        float_:bool=False,
+        ) -> dict:
+    data = create_random_number_array(
+        low=low,
+        high=high,
+        size=size,
+        dimension=dimension,
+        float_=float_
+    )
+    """
+    e.g.
+    Original: [-5, -3,  4,  4,  0,  1, 1, 3,  3, 1, -4, -5]
+         New: [-5, -3, 4, 0, 1, 3, 1, -4, -5]
+    """
+    array_ = []
+    array_.append(data['list_'][0])
+    for i, e in enumerate(data['list_'][1:], start=1):
+        if e == data['list_'][i-1]:
+            continue
+        array_.append(e)
+
+    return array_
+
+
 def create_random_number_array(
         low:int=1,
         high:int=1000000,
@@ -62,10 +91,13 @@ def display(data):
         print(f'{key} -> {value}')
 
 if __name__ == '__main__':
-    data = create_random_number_array(low=-5, high=5, size=10)
+    #data = create_random_number_array(low=-5, high=5, size=10)
     #display(data)
-    data = create_random_alphabet_string(size=20)
-    display(data)
+    #data = create_random_alphabet_string(size=20)
+    #display(data)
+    #data = create_random_number_array_withiout_same_neibour(low=-5, high=5, size=10)
+    data = create_random_number_array_withiout_same_neibour()
+#    display(data)
 
 """
 TODO List:
