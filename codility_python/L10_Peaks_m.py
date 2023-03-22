@@ -109,12 +109,10 @@ def find_peak_distance(peak_indices):
 
 def verify(array_, peaks_array, max_possible_group_count, element_count_in_each_group):
     i = 0
-    #print(f'==-->>i: {i}, max_possible_group_count: {max_possible_group_count}')
     while i < max_possible_group_count:
         if i == 0:
             new_array = array_[0:element_count_in_each_group]
             start = 0
-            ##print(f'==-->>U. i: {i}, max_possible_group_count: {max_possible_group_count}, element_count_in_each_group: {element_count_in_each_group}\nnew_array: {new_array}')
         elif i*element_count_in_each_group == len(array_):
             new_array = array_[i*element_count_in_each_group:]
             start = (i-1)*element_count_in_each_group
@@ -128,82 +126,68 @@ def verify(array_, peaks_array, max_possible_group_count, element_count_in_each_
     return True
 
 def is_peak_in_new_array(peaks_array, start, new_array):
-    ##print(f'In is_peak_in_new_array(): peaks_array type: {type(peaks_array)}, peaks_array length: {len(peaks_array)}')
     for j, e in enumerate(new_array, start=start):
-        ##print(f'j: {j}, new_array[j]: {new_array[j]}')
-        ##print(f'j: {j}, peaks_array[j]: {peaks_array[j]}')
         if peaks_array[j]:
-            ##print(f'==-->>j: {j}, peaks_array[j]: {peaks_array[j]}')
+            # This section of the original array contains a peak
             return True
     return False
 
 
 def solution_mine(array_):
     # Score 100%
-    ##print(f'array_ length: {len(array_)}, #{array_}#')
-    #print(f'array_ length: {len(array_)}')
     peaks_array, peaks_index = create_peaks(array_)
     if len(peaks_index) == 0:
+        # No peak in array_
         return 0
-    #print(f'peaks_index: {peaks_index}')
+    if len(peaks_index) == 1:
+        # One peak in array_
+        return 1
+
     peak_distance = find_peak_distance(peaks_index)
     sorted_peak_distance = sorted(peak_distance)
+    # Max distance between two peaks
+    max_mid_distance = sorted_peak_distance[-1]
+
+    # The left most peak's distance to the start point
     left_distance = peaks_index[0] + 1
+    # The right most peak's distance to the end point
     right_distance = len(array_) - peaks_index[-1]
-    if len(sorted_peak_distance) > 0:
-        max_mid_distance = sorted_peak_distance[-1]
-    else:
-        max_mid_distance = 0
 
     max_distance = max(left_distance, right_distance, max_mid_distance//2)
     if max_distance == 0:
         return 0
 
-    ##print(f'peaks_array: {peaks_array}')
-    ##print(f'peaks_index: {peaks_index}')
-    ##print(f'peak_distance: {peak_distance}')
-    ##print(f'max_mid_distance: {max_mid_distance}, min_mid_distance: {min_mid_distance}')
-    #print(f'max_mid_distance: {max_mid_distance}')
-    #print(f'left_distance: {left_distance}, right_distance: {right_distance}')
-    #print(f'max_distance: {max_distance}')
-
     max_possible_group_count = len(array_)//max_distance
-    #print(f'A. max_possible_group_count = {max_possible_group_count}')
     while len(array_)%max_possible_group_count != 0:
+        # make sure max_possible_group_count can be divided by the length of array_
         max_possible_group_count -= 1
 
-    #print(f'B. max_possible_group_count = {max_possible_group_count}')
-    if max_possible_group_count < 1:
-        return max_possible_group_count
+    if max_possible_group_count == 1:
+        return 1
 
+    # We know len(array_)//max_possible_group_count == int(len(array_)/max_possible_group_count)
+    # i.e. max_possible_group_count is divisible by len(array_)
     element_count_in_each_group = len(array_)//max_possible_group_count
-    #print(f'element_count_in_each_group: {element_count_in_each_group}')
 
     true_or_false = verify(array_, peaks_array, max_possible_group_count, element_count_in_each_group)
-    #print(f'C. true_or_false: {true_or_false}, max_possible_group_count = {max_possible_group_count}')
+    # if true_or_false is True, then each group contains at least one peak
     while not true_or_false:
         max_possible_group_count -= 1
-        #print(f'D. true_or_false: {true_or_false}, max_possible_group_count = {max_possible_group_count}')
-        if max_possible_group_count < 1:
+        if max_possible_group_count == 1:
             return max_possible_group_count
 
         while len(array_)%max_possible_group_count != 0:
+            # Again, make sure that max_possible_group_count is divisible by len(array_)
             max_possible_group_count -= 1
 
-        #print(f'E. true_or_false: {true_or_false}, max_possible_group_count = {max_possible_group_count}')
-        if max_possible_group_count < 1:
+        if max_possible_group_count == 1:
             return max_possible_group_count
-        #print(f'F. true_or_false: {true_or_false}, max_possible_group_count = {max_possible_group_count}')
 
         element_count_in_each_group = len(array_)//max_possible_group_count
-        #print(f'G. true_or_false: {true_or_false}, max_possible_group_count = {max_possible_group_count}, element_count_in_each_group: {element_count_in_each_group}')
         true_or_false = verify(array_, peaks_array, max_possible_group_count, element_count_in_each_group)
-        #print(f'H. true_or_false: {true_or_false}, max_possible_group_count = {max_possible_group_count}, element_count_in_each_group: {element_count_in_each_group}')
 
-    #print(f'I. true_or_false: {true_or_false}, max_possible_group_count = {max_possible_group_count}, element_count_in_each_group: {element_count_in_each_group}')
     return max_possible_group_count
 
-    i = 1
 
 def solution_02(A):
     # write your code in Python 3.6
@@ -313,6 +297,7 @@ def solution_04(A):
 
 if __name__ == '__main__':
     """
+    arr = [1,1,2,1,1]
     arr = [1, 2, 3, 4, 3, 4, 1, 2, 3, 4, 6, 2]
     arr = [1, 1, 1, 1, 2, 1, 4, 1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4, 1, 2, 1, 2,3,4, 1, 2, 1, 1,1]
     arr = [1, 1, 1, 1, 2, 1, 1]
@@ -323,7 +308,6 @@ if __name__ == '__main__':
     print(solution_04(arr))
     """
 
-    #low = -1_000_000
     high = 1_000_000_000
     size = 100_000
     solution_list = [
@@ -337,8 +321,7 @@ if __name__ == '__main__':
     import time
     from aquarius.libs import data_generator
 
-    #arr = data_generator.create_random_number_array_withiout_same_neibour(high=high, size=size)
-    arr = [1,1,1,1,1]
+    arr = data_generator.create_random_number_array_withiout_same_neibour(high=high, size=size)
     print(f'Array length in test: {len(arr)}')
     summary = []
     for j, solution in enumerate(solution_list, start=1):
@@ -349,4 +332,13 @@ if __name__ == '__main__':
         #print(method, answer, elapsed)
         summary.append((method, answer, elapsed))
     my_test.display_summary(summary)
+
+"""
+[aquarius] codility_python 207 => p3 L10_Peaks_m.py
+Array length in test: 100000
+1, solution_mine - 10,000: Time Consumed: 0.0609
+2,   solution_02 - 10,000: Time Consumed: 0.0654
+3,   solution_03 - 10,000: Time Consumed: 0.033
+4,   solution_04 - 10,000: Time Consumed: 0.0339
+"""
 
