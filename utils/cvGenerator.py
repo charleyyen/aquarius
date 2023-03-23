@@ -80,6 +80,7 @@ class CvGenerator:
                     #print(f'Length: {len(list_)}, #{list_}#\n{line}\n')
                     assert len(list_) == 2
                     key_name = "_".join(list_[1].strip().split())
+                    key_name = key_name.replace("'", "") # remove single quote from company name
                     new_cover_letter = self.archived_dir + self.date_for_file_prefix + "_" + key_name.lower() + ".txt"
                     new_cover_letter_pdf = new_cover_letter.replace("txt", "pdf")
                     print(f'##==-->>new_cover_letter PDF: {new_cover_letter.replace("txt", "pdf")}')
@@ -104,6 +105,7 @@ class CvGenerator:
                     file_handle.close()
 
                     command = f"libreoffice --convert-to pdf --outdir {self.archived_dir} {new_cover_letter}"
+                    print(f'{command}')
                     child = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
                     streamdata = child.communicate()[0]
                     loop = 0
