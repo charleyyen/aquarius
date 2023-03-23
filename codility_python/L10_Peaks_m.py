@@ -87,7 +87,13 @@ Write an efficient algorithm for the following assumptions:
 Copyright 2009–2023 by Codility Limited. All Rights Reserved. Unauthorized
 copying, publication or disclosure prohibited.
 """
-def create_peaks(arr):
+def find_peaks(arr):
+    """
+    Find peaks in the original array
+    :return: peaks_array - an array contains False/True value. When an element's value is True
+                           it indicates there is a peak at this position
+             peaks_index - an array contains all peaks' indices
+    """
     n = len(arr)
     peaks_array = [False] * n
     peaks_index = []
@@ -98,6 +104,11 @@ def create_peaks(arr):
     return peaks_array, peaks_index
 
 def find_peak_distance(peak_indices):
+    """
+    Find the distance between the two adjacent peaks
+    :param: peak_indices: an array contains all peaks' indices
+    :return: peak_distance: an array contains the distance between 2 adjacent peaks
+    """
     peak_distance = []
     start = 1
     for i, coordinate in enumerate(peak_indices[start:], start=start):
@@ -108,6 +119,9 @@ def find_peak_distance(peak_indices):
 
 
 def verify(array_, peaks_array, max_possible_group_count, element_count_in_each_group):
+    """
+    Verify whether each group contains at least one peak
+    """
     i = 0
     while i < max_possible_group_count:
         if i == 0:
@@ -126,22 +140,32 @@ def verify(array_, peaks_array, max_possible_group_count, element_count_in_each_
     return True
 
 def is_peak_in_new_array(peaks_array, start, new_array):
-    for j, e in enumerate(new_array, start=start):
-        if peaks_array[j]:
+    """
+    Check if a section of the original array contains a peak
+    :param peaks_array: an array contains False/True values. When an element is True, it indicates
+                        at this position there is a peak
+    :param start: the starting index of the first element of new_array in the orginal array
+    :param new_array: an array which is a section of the original array. The 1st element in this
+                      section is actually at the position 'start' in the orignial array
+    """
+    for k, _ in enumerate(new_array, start=start):
+        if peaks_array[k]:
             # This section of the original array contains a peak
             return True
     return False
 
 
 def solution_mine(array_):
+    """
+    given a non-empty array A consisting of N integers, returns the
+    maximum number of blocks into which A can be divided.
     # Score 100%
-    peaks_array, peaks_index = create_peaks(array_)
-    if len(peaks_index) == 0:
-        # No peak in array_
-        return 0
-    if len(peaks_index) == 1:
-        # One peak in array_
-        return 1
+    """
+    peaks_array, peaks_index = find_peaks(array_)
+    if len(peaks_index) < 2:
+        # len(peaks_index) == 0 ==>> No peaks
+        # len(peaks_index) == 1 ==>> One peak
+        return len(peaks_index)
 
     peak_distance = find_peak_distance(peaks_index)
     sorted_peak_distance = sorted(peak_distance)
@@ -169,7 +193,11 @@ def solution_mine(array_):
     # i.e. max_possible_group_count is divisible by len(array_)
     element_count_in_each_group = len(array_)//max_possible_group_count
 
-    true_or_false = verify(array_, peaks_array, max_possible_group_count, element_count_in_each_group)
+    true_or_false = verify(
+        array_, peaks_array,
+        max_possible_group_count,
+        element_count_in_each_group
+    )
     # if true_or_false is True, then each group contains at least one peak
     while not true_or_false:
         max_possible_group_count -= 1
@@ -184,49 +212,62 @@ def solution_mine(array_):
             return max_possible_group_count
 
         element_count_in_each_group = len(array_)//max_possible_group_count
-        true_or_false = verify(array_, peaks_array, max_possible_group_count, element_count_in_each_group)
+        true_or_false = verify(
+            array_,
+            peaks_array,
+            max_possible_group_count,element_count_in_each_group
+        )
 
     return max_possible_group_count
 
 
 def solution_02(A):
+    """
+    Note: As reference, below is another implementation credited to
+    https://github.com/Mickey0521/Codility
+    """
     # write your code in Python 3.6
-    
+
     peak_list = []
-    
+
     # find peaks
     for index in range( 1, len(A)-1 ):
         if A[index] > A[index-1] and A[index] > A[index+1]:
             peak_list.append( index )
-    
+
     #print(peak_list)
 
     for num_block in range( len(A), 0 , -1 ):
 
         # check 'blocks containing the same number of elements'
-        if ( len(A) % num_block == 0):
-            
-            block_size = int( len(A)/num_block ) 
+        if len(A) % num_block == 0:
+
+            block_size = int( len(A)/num_block )
             ith_block = 0
             num_block_has_peak = 0
-            
+
             for peak_index in peak_list:
-                
+
                 # check if any peak is within the ith block
-                if int( peak_index/block_size) == ith_block: 
+                if int( peak_index/block_size) == ith_block:
                     num_block_has_peak += 1
                     ith_block += 1
-        
+
             # chek if all blocks have at least one peak
             if num_block_has_peak == num_block:
                 return num_block
-    
+
     return 0
 
 
 def solution_03(A):
+    """
+    Note: As reference, below is another implementation credited to
+    https://github.com/shihsyun/codility_lessons/tree/master/Lesson10
+    """
     N = len(A)
-    if N < 3: return 0
+    if N < 3:
+        return 0
     peaks = []
 
     for idx in range(1, N-1):
@@ -234,7 +275,7 @@ def solution_03(A):
             peaks.append(idx)
 
     for size in range(len(peaks), 0, -1):
-         if N % size == 0:
+        if N % size == 0:
 
             block_len = N // size
             check = [0]*size
@@ -249,6 +290,10 @@ def solution_03(A):
     return 0
 
 def solution_04(A):
+    """
+    Note: As reference, below is another implementation credited to
+    https://github.com/Dineshkarthik/codility-training/tree/master/Lesson%2010%20-%20Prime%20and%20composite%20numbers
+    """
 
     length = len(A)
 
@@ -299,7 +344,7 @@ if __name__ == '__main__':
     """
     arr = [1,1,2,1,1]
     arr = [1, 2, 3, 4, 3, 4, 1, 2, 3, 4, 6, 2]
-    arr = [1, 1, 1, 1, 2, 1, 4, 1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4, 1, 2, 1, 2,3,4, 1, 2, 1, 1,1]
+    arr = [1,1,1,1,2,1,4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,1,2,1,2,3,4,1,2,1,1,1]
     arr = [1, 1, 1, 1, 2, 1, 1]
     arr = [1, 1, 2, 1, 2, 1, 1]
     print(solution_mine(arr))
@@ -309,7 +354,7 @@ if __name__ == '__main__':
     """
 
     high = 1_000_000_000
-    size = 100_000
+    array_size = 100_000
     solution_list = [
         solution_mine,
         solution_02,
@@ -321,14 +366,14 @@ if __name__ == '__main__':
     import time
     from aquarius.libs import data_generator
 
-    arr = data_generator.create_random_number_array_withiout_same_neibour(high=high, size=size)
-    print(f'Array length in test: {len(arr)}')
+    data = data_generator.create_random_number_array_withiout_same_neibour(high=high, size=array_size)
+    print(f'Array length in test: {len(data)}')
     summary = []
     for j, solution in enumerate(solution_list, start=1):
         method = str(solution).split()[1]
-        start = time.time()
-        answer = solution(arr)
-        elapsed = round(time.time() - start, 4)
+        start_time = time.time()
+        answer = solution(data)
+        elapsed = round(time.time() - start_time, 4)
         #print(method, answer, elapsed)
         summary.append((method, answer, elapsed))
     my_test.display_summary(summary)
@@ -341,4 +386,3 @@ Array length in test: 100000
 3,   solution_03 - 10,000: Time Consumed: 0.033
 4,   solution_04 - 10,000: Time Consumed: 0.0339
 """
-
