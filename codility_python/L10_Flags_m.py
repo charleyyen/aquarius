@@ -75,15 +75,15 @@ def solution(array_):
             peak_indices.append(i)
 
     flags = len(peak_indices)
-    if flags == 0:
-        return 0
+    if flags < 3:
+        return flags
 
     # Note:
     # The while loop below is the key to enhance the performance
     # W/o this while loop, it'll only score 66%. Five out of 7 performance
     # tests will fail.
-    while flags * (flags - 1)  > peak_indices[-1] - peak_indices[0]:
-        flags -=1
+    while flags * (flags - 1) > peak_indices[-1] - peak_indices[0]:
+        flags -= 1
 
     while flags:
         distance = 0
@@ -96,13 +96,14 @@ def solution(array_):
         if flags_on_peak >= flags:
             return flags
 
-        flags -=1
+        flags -= 1
 
     return 0
 
 
 if __name__ == '__main__':
     array_ = [1,5,3,4,3,4,1,2,3,4,6,2]
-#    array_ = [1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1]
+    array_ = [1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1]
+    array_ =  [1, 5, 3, 4, 3, 4, 1, 2, 3, 4, 6, 2]
 #    array_ = [1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1] # should be 4 got 4
     print(solution(array_))
