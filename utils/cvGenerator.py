@@ -48,10 +48,10 @@ class CvGenerator:
         file_with_pattern1 = self.archived_dir + "*" + key_name + "*.pdf"
         file_with_pattern2 = self.archived_dir + "*" + key_name.lower() + "*.pdf"
         if glob.glob(file_with_pattern1):
-            print(f'Already applied "{key_name}":\n{file_with_pattern1}\n')
+            print(f'===--->>>Already applied "{key_name}":\n{file_with_pattern1}\n')
             return True
         if glob.glob(file_with_pattern2):
-            print(f'Already applied "{key_name}":\n{file_with_pattern2}\n')
+            print(f'===--->>>Already applied "{key_name}":\n{file_with_pattern2}\n')
             return True
 
         return False
@@ -78,14 +78,18 @@ class CvGenerator:
 
                     list_ = line.rstrip().split(",")
                     #print(f'Length: {len(list_)}, #{list_}#\n{line}\n')
-                    assert len(list_) == 2
+                    assert len(list_) == 2 or len(list_) == 3
                     key_name = "_".join(list_[1].strip().split())
                     key_name = key_name.replace("'", "") # remove single quote from company name
+                    key_name = key_name.replace("&", "and") # replace '&' in company name with 'and'
                     new_cover_letter = self.archived_dir + self.date_for_file_prefix + "_" + key_name.lower() + ".txt"
                     new_cover_letter_pdf = new_cover_letter.replace("txt", "pdf")
                     print(f'##==-->>new_cover_letter PDF: {new_cover_letter.replace("txt", "pdf")}')
                     if self.applied_already(key_name):
-                        continue
+                        if len(list_) == 2 and list_[2].strip() == 'o':
+                            list_.pop()
+                        else:
+                            continue
 
                     assert site_name
                     list_.append(site_name)
