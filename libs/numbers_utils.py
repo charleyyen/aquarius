@@ -168,6 +168,8 @@ def find_all_primes_in_range_4(start=1, end=2_147_483_647):
     # THE LOOP
     a = start
     b = end
+    if a == 2:
+        list_.append(2)
     if (a % 2 == 0):
         a+=1
     # NOTE : WE TRAVERSE THROUGH ODD NUMBERS ONLY
@@ -190,6 +192,24 @@ def find_all_primes_in_range_4(start=1, end=2_147_483_647):
 
     return list_
 
+def find_all_primes_in_range_5(start=1, end=2_147_483_647):
+#def find_all_primes_in_range_5(start=2, end=30):
+    # High efficient
+    prime = [True for i in range(end+1)]
+    p = start 
+    while p * p <= end:
+        # If prime[p] is not changed, then it is a prime
+        if prime[p]:
+            # Updating all multiples of p
+            for i in range(p * p, end+1, p):
+                prime[i] = False
+        p += 1
+
+    list_ = []
+    for p in range(2, end+1):
+        if prime[p]:
+            list_.append(p)
+    return list_
 
 # --- test ---
 def test_is_prime(number=0):
@@ -252,13 +272,14 @@ def test_find_largest_prime(number=0):
 
 
 def test_find_all_primes_in_range():
-    i_0 = 1
-    i_1 = 1_000_000
+    i_0 = 2
+    i_1 = 100_000_000
     method_list = [
         #find_all_primes_in_range_1,
-        find_all_primes_in_range_2,
+        #find_all_primes_in_range_2,
         #find_all_primes_in_range_3,
         #find_all_primes_in_range_4,
+        find_all_primes_in_range_5,
     ]
 
     for j, a_method in enumerate(method_list, start=1):
@@ -266,7 +287,23 @@ def test_find_all_primes_in_range():
         start = time.time()
         answer = a_method(start=i_0, end=i_1)
         elapsed = round(time.time() - start, 4)
-        print(f'{method}, {len(answer)}, {answer[-5:]}, {elapsed}')
+        print(f'{method}, {len(answer)}, {answer[:5]}, {answer[-5:]}, {elapsed}')
+
+    """
+    i_0 = 2
+    i_1 = 1_000_000
+    find_all_primes_in_range_4, 78498, [2, 3, 5, 7, 11], [999953, 999959, 999961, 999979, 999983], 8.6215
+    find_all_primes_in_range_5, 78498, [2, 3, 5, 7, 11], [999953, 999959, 999961, 999979, 999983], 0.2018
+
+    i_0 = 2
+    i_1 = 10_000_000
+    find_all_primes_in_range_5, 664579, [2, 3, 5, 7, 11], [9999937, 9999943, 9999971, 9999973, 9999991], 2.365
+
+    i_0 = 2
+    i_1 = 100_000_000
+    find_all_primes_in_range_5, 5761455, [2, 3, 5, 7, 11], [99999931, 99999941, 99999959, 99999971, 99999989], 24.9535
+    """
+
 
 if __name__ == '__main__':
     number = 994013 - 1
@@ -275,7 +312,7 @@ if __name__ == '__main__':
     #test_find_prime_factors(number=number)
     #test_find_largest_prime(number=number)
 
-    test_is_prime(number=number)
+    #test_is_prime(number=number)
     """
     n=2_147_483_647
     1, is_prime_1 - True: Time Consumed: 129.8231
@@ -283,4 +320,4 @@ if __name__ == '__main__':
     3, is_prime_4 - True: Time Consumed: 0.0054
     """
 
-    #test_find_all_primes_in_range()
+    test_find_all_primes_in_range()
