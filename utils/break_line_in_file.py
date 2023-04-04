@@ -47,7 +47,8 @@ class BreakLongLineInFile:
         file_handle = open("/tmp/aa", "w")
         i = 0
         for line in buffer:
-            if len(line.strip()) <= self.length:
+            if len(line.strip()) <= self.length or \
+                    line.lstrip().startswith("https"):
                 file_handle.write(line.rstrip()+"\n")
             else:
                 new_line = self.break_line(line)
@@ -94,7 +95,7 @@ class BreakLongLineInFile:
 
         i = 1
         right_position = self.length + i
-        while line[right_position] != " ":
+        while right_position < len(line) and line[right_position] != " ":
             i += 1
             right_position = self.length + i
 
