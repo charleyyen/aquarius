@@ -18,6 +18,13 @@ yt-dlp a9d069f5b from Graham Morrison (morrisong) installed
 Latest version: 2023.02.17, Current version: 2022.11.11
 ERROR: You installed yt-dlp with a package manager or setup.py; Use that to update
 
+[aquarius] ~ 2 => sudo yt-dlp -U
+[sudo] password for cyan:
+Latest version: 2023.03.04, Current version: 2023.02.17
+Current Build Hash a666e88e7f313bf79bf5df1f7379cf80c2780211c41950f75fba1ddff5b5e6c0
+Updating to version 2023.03.04 ...
+Updated yt-dlp to version 2023.03.04
+
 -----------------------------------------------------------------------------------
 
 """
@@ -39,11 +46,14 @@ from multiprocessing.pool import ThreadPool as Pool
 
 FILEFORMAT = ['mp3', 'mp4']
 DEST = '/home/cyan/Music/dest/'
-DEST = '/tmp/'
+#DESTv = '/home/cyan/Videos/youtube'
 #RIP = 'youtube-dl -x --audio-quality 0 -f bestaudio --restrict-filenames --audio-format mp3 '
 #RIPV = 'youtube-dl --recode-video mp4'
 RIP = 'yt-dlp -x --audio-quality 0 -f bestaudio --restrict-filenames --audio-format mp3 '
-RIPV = 'yt-dlp --recode-video mp4'
+#RIPV = 'yt-dlp --recode-video mp4'
+#RIPV = 'yt-dlp -f bestvideo+bestaudio/best --merge-output-format mp4 --add-metadata --embed-chapters '
+RIPV = 'yt-dlp -f bestvideo+bestaudio/best --merge-output-format mp4 '
+# cmd = self.rip_command + f' -o "{temp_dir}/%(title)s.%(ext)s" --cookies-from-browser chrome --no-part ' + url
 FORMAT_RIP = {
     'mp3': RIP,
     'mp4': RIPV
@@ -59,6 +69,7 @@ class RipMusic:
         self.rip_command = RIP
         self.srce = None
         self.dest_dir = DEST + date.today().strftime('%Y_%m_%d')
+        #self.dest_dir = DESTv + date.today().strftime('%Y_%m_%d')
         if not os.path.exists(self.dest_dir):
             os.makedirs(self.dest_dir)
 
@@ -149,6 +160,7 @@ class RipMusic:
             print(f'{"-"*40}')
 
         #cmd = RIP + f' -o "{temp_dir}/%(title)s.%(ext)s" --no-part ' + url
+        #cmd = self.rip_command + f' -o "{temp_dir}/%(title)s.%(ext)s" --cookies-from-browser chrome --no-part --referer ' + url
         cmd = self.rip_command + f' -o "{temp_dir}/%(title)s.%(ext)s" --no-part ' + url
         print(f"\n\nCMD:\n{cmd}\n\n")
         with subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as response:
