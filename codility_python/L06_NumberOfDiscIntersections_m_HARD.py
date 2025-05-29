@@ -1,7 +1,11 @@
 """
-We draw N discs on a plane. The discs are numbered from 0 to N − 1. An array A of N non-negative integers, specifying the radiuses of the discs, is given. The J-th disc is drawn with its center at (J, 0) and radius A[J].
+We draw N discs on a plane. The discs are numbered from 0 to N − 1. An
+array A of N non-negative integers, specifying the radiuses of the discs,
+is given. The J-th disc is drawn with its center at (J, 0) and radius A[J].
 
-We say that the J-th disc and K-th disc intersect if J ≠ K and the J-th and K-th discs have at least one common point (assuming that the discs contain their borders).
+We say that the J-th disc and K-th disc intersect if J ≠ K and the J-th
+and K-th discs have at least one common point (assuming that the discs
+contain their borders).
 
 The figure below shows discs drawn for N = 6 and A as follows:
   A[0] = 1
@@ -22,7 +26,9 @@ Write a function:
 
     def solution(A)
 
-that, given an array A describing N discs as explained above, returns the number of (unordered) pairs of intersecting discs. The function should return −1 if the number of intersecting pairs exceeds 10,000,000.
+that, given an array A describing N discs as explained above, returns
+the number of (unordered) pairs of intersecting discs. The function
+should return −1 if the number of intersecting pairs exceeds 10,000,000.
 
 Given array A shown above, the function should return 11, as explained above.
 
@@ -31,21 +37,35 @@ Write an efficient algorithm for the following assumptions:
         N is an integer within the range [0..100,000];
         each element of array A is an integer within the range [0..2,147,483,647].
 
-Copyright 2009–2023 by Codility Limited. All Rights Reserved. Unauthorized copying, publication or disclosure prohibited.
+Copyright 2009–2023 by Codility Limited. All Rights Reserved. Unauthorized
+copying, publication or disclosure prohibited.
 """
 
-def solution_1_50_100_0(A):
-    # Task Score 50% Correctness 100% Performance 0%
+def solution(A):
+    left_right = {}
+    right_left = {}
+    left = []
+    right = []
     intersection = 0
-    for i in range(len(A[:-1])):
-        for j in range(i+1, len(A)):
-            if j+A[j] < i-A[i] or i+A[i] < j-A[j]:
-                pass
-            else:
+    #print(A)
+    for i, value in enumerate(A):
+        left.append(i-value)
+        right.append(i+value)
+        left_right[i-value] = i+value
+        right_left[i+value] = i-value
+
+    #print(left)
+    for i, left_value in enumerate(sorted(left)):
+        j = i
+        #print(f'A. i: {i}, j: {j}')
+        while j < len(right):
+            if left_right[left_value] != right[j]:
+                if left_value < right[j]:
+                    continue
                 intersection += 1
-                if intersection > 10_000_000:
-                    return -1
-    
+            #print(f'B. i: {i}, j: {j}')
+            j += 1
+
     return intersection
     
 if __name__ == '__main__':
