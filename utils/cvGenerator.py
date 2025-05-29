@@ -86,8 +86,11 @@ class CvGenerator:
                     new_cover_letter_pdf = new_cover_letter.replace("txt", "pdf")
                     print(f'##==-->>new_cover_letter PDF: {new_cover_letter.replace("txt", "pdf")}')
                     if self.applied_already(key_name):
-                        if len(list_) == 2 and list_[2].strip() == 'o':
-                            list_.pop()
+                        if len(list_) == 3:
+                            if list_[2].strip() == 'o':
+                                list_.pop()
+                            else:
+                                assert False, f"Unknown parameter '{list_[2].strip()}' for '{key_name.lower()}'"
                         else:
                             continue
 
@@ -109,6 +112,7 @@ class CvGenerator:
                     file_handle.close()
 
                     command = f"libreoffice --convert-to pdf --outdir {self.archived_dir} {new_cover_letter}"
+                    # libreoffice --convert-to pdf --outdir <dir name> <ascii filename>
                     print(f'{command}')
                     child = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
                     streamdata = child.communicate()[0]
