@@ -11,20 +11,11 @@ As of today, 02/20/2023, downloaded yt-dlp using cmd:
 yt-dlp a9d069f5b from Graham Morrison (morrisong) installed
 [aquarius] mybin 177 => which yt-dlp
 /snap/bin/yt-dlp
-[aquarius] mybin 178 => yt-dlp --version
-2022.11.11
-
-[aquarius] tmp 350 => yt-dlp -U
-Latest version: 2023.02.17, Current version: 2022.11.11
-ERROR: You installed yt-dlp with a package manager or setup.py; Use that to update
-
-[aquarius] ~ 2 => sudo yt-dlp -U
-[sudo] password for cyan:
-Latest version: 2023.03.04, Current version: 2023.02.17
-Current Build Hash a666e88e7f313bf79bf5df1f7379cf80c2780211c41950f75fba1ddff5b5e6c0
-Updating to version 2023.03.04 ...
-Updated yt-dlp to version 2023.03.04
-
+[aquarius] utils 64 => yt-dlp --version
+2025.05.22
+[aquarius] utils 65 =>  yt-dlp -U
+Latest version: stable@2025.05.22 from yt-dlp/yt-dlp
+yt-dlp is up to date (stable@2025.05.22 from yt-dlp/yt-dlp)
 -----------------------------------------------------------------------------------
 
 """
