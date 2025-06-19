@@ -16,7 +16,7 @@ def post_process_and_correct_data(row_data: Dict[str, str]) -> Dict[str, str]:
     
     two_decimal_columns = ['Last', 'Change', 'Bid', 'Ask']
     
-    # --- RULE 1: Fix missing decimal points ---
+    # Rule 1: Fix missing decimal points
     for key, value in corrected_data.items():
         if key in two_decimal_columns and '.' not in value:
             sign = ''
@@ -29,19 +29,114 @@ def post_process_and_correct_data(row_data: Dict[str, str]) -> Dict[str, str]:
                 new_num = num_part[:-2] + '.' + num_part[-2:]
                 corrected_data[key] = sign + new_num
     
-    # --- RULE 2: Fix the specific OCR error where '+' is read as '4' in the 'Change' column ---
+    # Rule 2: Fix the specific OCR error where '+' is read as '4' in the 'Change' column
     change_val = corrected_data.get('Change', '')
     if change_val.startswith('40.'):
         corrected_data['Change'] = '+' + change_val[1:]
         
-    # --- RULE 3: Fix the specific OCR error where a leading '+' is read as '4' in the '% Change' column ---
+    # Rule 3: Fix the specific OCR error where a leading '+' is read as '4' in the '% Change' column
     pct_change_val = corrected_data.get('% Change', '')
     if pct_change_val and pct_change_val.startswith('4'):
-        # Based on the rule that % Change always has a sign, if it starts with '4',
-        # we assume it was a misread '+' sign.
         corrected_data['% Change'] = '+' + pct_change_val[1:]
                     
     return corrected_data
+
+def format_currency_columns(row_data: Dict[str, str]) -> Dict[str, str]:
+    """
+    Adds a '$' prefix to specified currency columns.
+    """
+    formatted_data = row_data.copy()
+    currency_columns = ['Last', 'Bid', 'Ask']
+    
+    for key in currency_columns:
+        if key in formatted_data:
+            if not formatted_data[key].startswith('$'):
+                formatted_data[key] = '$' + formatted_data[key]
+                
+    return formatted_data
+
+def clean_percentage_columns(row_data: Dict[str, str]) -> Dict[str, str]:
+    """
+    Removes the '%' symbol from specified percentage columns.
+    """
+    cleaned_data = row_data.copy()
+    percentage_columns = ['% Change', 'IV %']
+    
+    for key in percentage_columns:
+        if key in cleaned_data:
+            cleaned_data[key] = cleaned_data[key].replace('%', '')
+            
+    return cleaned_data
+
+# --- RENAMED FUNCTION ---
+def format_exp_date(date_str: str) -> str:
+    """
+    Converts a date string from "Mon Day 'YY" format to "MM/DD/YY".
+    """
+    month_map = {
+        'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06',
+        'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
+    }
+    try:
+        parts = date_str.split()
+        month_abbr = parts[0]
+        day = parts[1]
+        year = parts[2].replace("'", "")
+        
+        month_num = month_map.get(month_abbr, "00")
+        
+        return f"{month_num}/{day}/{year}"
+    except (IndexError, KeyError):
+        return date_str
+
+def remove_commas_from_numbers(row_data: Dict[str, str]) -> Dict[str, str]:
+    """
+    Removes commas from all values in the data dictionary.
+    """
+    cleaned_data = {}
+    for key, value in row_data.items():
+        if isinstance(value, str):
+            cleaned_data[key] = value.replace(',', '')
+        else:
+            cleaned_data[key] = value
+            
+    return cleaned_data
+
+def format_decimal_places(row_data: Dict[str, str]) -> Dict[str, str]:
+    """
+    Formats specified columns to a fixed number of decimal places.
+    """
+    formatted_data = row_data.copy()
+    two_places_cols = ['Last', 'Change', '% Change', 'Bid', 'Ask', 'IV %']
+    four_places_cols = ['Delta', 'Gamma']
+
+    all_cols_to_format = two_places_cols + four_places_cols
+
+    for key, value in formatted_data.items():
+        if key not in all_cols_to_format:
+            continue
+
+        try:
+            sign = ''
+            num_str = value
+            if value.startswith(('+', '-')):
+                sign = value[0]
+                num_str = value[1:]
+            
+            float_val = float(num_str)
+            
+            if key in two_places_cols:
+                formatted_num = f"{float_val:.2f}"
+            elif key in four_places_cols:
+                formatted_num = f"{float_val:.4f}"
+            else:
+                formatted_num = num_str 
+
+            formatted_data[key] = sign + formatted_num
+        except (ValueError, TypeError):
+            continue
+            
+    return formatted_data
 
 
 def extract_options_data_from_image(image_path: str, debug: bool = False) -> List[Dict[str, str]]:
@@ -85,7 +180,7 @@ def extract_options_data_from_image(image_path: str, debug: bool = False) -> Lis
 
     full_headers_for_parsing = [
         'Last', 'Change', '% Change', 'Bid', 'Bid Size', 'Ask', 'Ask Size',
-        'Volume', 'Open Int', 'Imp Vol', 'Delta', 'Gamma', 'Action', 'Strike'
+        'Volume', 'Open Int', 'IV %', 'Delta', 'Gamma', 'Action', 'Strike'
     ]
     
     data_pattern = r"([+-]?\d[\d,.]*%?)"
@@ -96,24 +191,19 @@ def extract_options_data_from_image(image_path: str, debug: bool = False) -> Lis
         header_match = re.search(r'(CALLS|PUTS)\s+.*?((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}\s+[\'‘]\d{2})', line)
         if header_match:
             current_options_type = header_match.group(1)
-            current_exp_date = header_match.group(2) 
+            date_from_ocr = header_match.group(2)
+            # --- RENAMED FUNCTION CALL ---
+            current_exp_date = format_exp_date(date_from_ocr)
             continue
 
         ascii_line = line.encode("ascii", "ignore").decode()
         values = re.findall(data_pattern, ascii_line)
 
-        # --- RULE 4: Fix the "merged column" OCR error ---
-        # This checks for the specific case where 'Volume' and 'Open Int' are merged.
-        # It detects when we have 12 columns and the 'Volume' column looks like a merged value (e.g., '03').
-        VOLUME_COL_INDEX = 7 # The 8th column is at index 7
+        VOLUME_COL_INDEX = 7
         if len(values) == 12 and len(values[VOLUME_COL_INDEX]) == 2 and values[VOLUME_COL_INDEX].startswith('0'):
-            # It's the merged column error, let's split it back into two.
             merged_val = values[VOLUME_COL_INDEX]
-            # The first part is always '0' in this error pattern
             values[VOLUME_COL_INDEX] = '0' 
-            # The second part is the second digit of the merged value
             values.insert(VOLUME_COL_INDEX + 1, merged_val[1])
-            # The 'values' list now has 13 items and is corrected.
 
         if current_exp_date and len(values) > 5:
             if len(values) == len(full_headers_for_parsing) - 1:
@@ -122,18 +212,20 @@ def extract_options_data_from_image(image_path: str, debug: bool = False) -> Lis
             if len(values) == len(full_headers_for_parsing):
                 temp_row_data = dict(zip(full_headers_for_parsing, values))
                 
+                # --- START OF PROCESSING PIPELINE ---
                 corrected_row_data = post_process_and_correct_data(temp_row_data)
                 
-                final_dict = {
-                    'Type': current_options_type,
-                    'Exp Date': current_exp_date
-                }
-                
+                final_dict = { 'Type': current_options_type, 'Exp Date': current_exp_date }
                 for key, value in corrected_row_data.items():
-                    if key != 'Action':
-                        final_dict[key] = value
+                    if key != 'Action': final_dict[key] = value
+                
+                percent_cleaned_dict = clean_percentage_columns(final_dict)
+                comma_cleaned_dict = remove_commas_from_numbers(percent_cleaned_dict)
+                decimal_formatted_dict = format_decimal_places(comma_cleaned_dict)
+                fully_formatted_dict = format_currency_columns(decimal_formatted_dict)
+                # --- END OF PROCESSING PIPELINE ---
 
-                result_list.append(final_dict)
+                result_list.append(fully_formatted_dict)
 
     print("\n--- Final Extracted Data ---")
     if not result_list:
