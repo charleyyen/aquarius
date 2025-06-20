@@ -16,7 +16,7 @@ def post_process_and_correct_data(row_data: Dict[str, str]) -> Dict[str, str]:
     
     two_decimal_columns = ['Last', 'Change', 'Bid', 'Ask']
     
-    # Rule 1: Fix missing decimal points
+    # --- RULE 1: Fix missing decimal points for 2-decimal columns ---
     for key, value in corrected_data.items():
         if key in two_decimal_columns and '.' not in value:
             sign = ''
@@ -28,16 +28,36 @@ def post_process_and_correct_data(row_data: Dict[str, str]) -> Dict[str, str]:
             if num_part.isdigit() and len(num_part) >= 2:
                 new_num = num_part[:-2] + '.' + num_part[-2:]
                 corrected_data[key] = sign + new_num
-    
-    # Rule 2: Fix the specific OCR error where '+' is read as '4' in the 'Change' column
+
+    # --- RULE 2: Fix the specific OCR error where '+' is read as '4' in the 'Change' column ---
     change_val = corrected_data.get('Change', '')
     if change_val.startswith('40.'):
         corrected_data['Change'] = '+' + change_val[1:]
         
-    # Rule 3: Fix the specific OCR error where a leading '+' is read as '4' in the '% Change' column
+    # --- RULE 3: Fix the specific OCR error where a leading '+' is read as '4' in the '% Change' column ---
     pct_change_val = corrected_data.get('% Change', '')
     if pct_change_val and pct_change_val.startswith('4'):
         corrected_data['% Change'] = '+' + pct_change_val[1:]
+        
+    # --- RULE 4: Fix Gamma column based on your rules ---
+    gamma_val = corrected_data.get('Gamma', '')
+    if '.' not in gamma_val and gamma_val.startswith('0') and len(gamma_val) > 1:
+        # Insert '.' after the first '0'. e.g., '01048' -> '0.1048'
+        corrected_data['Gamma'] = gamma_val[0] + '.' + gamma_val[1:]
+
+    # --- RULE 5: Fix Delta column based on your rules ---
+    delta_val = corrected_data.get('Delta', '')
+    if '.' not in delta_val and delta_val.replace('-', '').isdigit():
+        sign = ''
+        num_part = delta_val
+        if delta_val.startswith('-'):
+            sign = '-'
+            num_part = delta_val[1:]
+        
+        # Format to 0.xxxx or -0.xxxx
+        # lstrip('0') handles cases like '01234' -> '1234'
+        num_part = num_part.lstrip('0')
+        corrected_data['Delta'] = sign + '0.' + num_part
                     
     return corrected_data
 
@@ -68,7 +88,6 @@ def clean_percentage_columns(row_data: Dict[str, str]) -> Dict[str, str]:
             
     return cleaned_data
 
-# --- RENAMED FUNCTION ---
 def format_exp_date(date_str: str) -> str:
     """
     Converts a date string from "Mon Day 'YY" format to "MM/DD/YY".
@@ -119,9 +138,10 @@ def format_decimal_places(row_data: Dict[str, str]) -> Dict[str, str]:
         try:
             sign = ''
             num_str = value
-            if value.startswith(('+', '-')):
-                sign = value[0]
-                num_str = value[1:]
+            # For values that start with a sign, separate the sign so 'float()' works
+            if isinstance(num_str, str) and num_str.startswith(('+', '-')):
+                sign = num_str[0]
+                num_str = num_str[1:]
             
             float_val = float(num_str)
             
@@ -130,7 +150,7 @@ def format_decimal_places(row_data: Dict[str, str]) -> Dict[str, str]:
             elif key in four_places_cols:
                 formatted_num = f"{float_val:.4f}"
             else:
-                formatted_num = num_str 
+                formatted_num = str(float_val)
 
             formatted_data[key] = sign + formatted_num
         except (ValueError, TypeError):
@@ -192,7 +212,6 @@ def extract_options_data_from_image(image_path: str, debug: bool = False) -> Lis
         if header_match:
             current_options_type = header_match.group(1)
             date_from_ocr = header_match.group(2)
-            # --- RENAMED FUNCTION CALL ---
             current_exp_date = format_exp_date(date_from_ocr)
             continue
 
@@ -212,7 +231,6 @@ def extract_options_data_from_image(image_path: str, debug: bool = False) -> Lis
             if len(values) == len(full_headers_for_parsing):
                 temp_row_data = dict(zip(full_headers_for_parsing, values))
                 
-                # --- START OF PROCESSING PIPELINE ---
                 corrected_row_data = post_process_and_correct_data(temp_row_data)
                 
                 final_dict = { 'Type': current_options_type, 'Exp Date': current_exp_date }
@@ -223,7 +241,6 @@ def extract_options_data_from_image(image_path: str, debug: bool = False) -> Lis
                 comma_cleaned_dict = remove_commas_from_numbers(percent_cleaned_dict)
                 decimal_formatted_dict = format_decimal_places(comma_cleaned_dict)
                 fully_formatted_dict = format_currency_columns(decimal_formatted_dict)
-                # --- END OF PROCESSING PIPELINE ---
 
                 result_list.append(fully_formatted_dict)
 
