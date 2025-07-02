@@ -1,6 +1,6 @@
 import re
 import pytesseract
-import easyocr  # <-- NEW IMPORT
+import easyocr
 import argparse
 from PIL import Image
 from typing import List, Dict
@@ -17,7 +17,7 @@ def post_process_and_correct_data(row_data: Dict[str, str]) -> Dict[str, str]:
     
     two_decimal_columns = ['Last', 'Change', 'Bid', 'Ask']
     
-    # Rule 1: Fix missing decimal points
+    # --- RULE 1: Fix missing decimal points ---
     for key, value in corrected_data.items():
         if key in two_decimal_columns and '.' not in value:
             sign = ''
@@ -30,22 +30,22 @@ def post_process_and_correct_data(row_data: Dict[str, str]) -> Dict[str, str]:
                 new_num = num_part[:-2] + '.' + num_part[-2:]
                 corrected_data[key] = sign + new_num
     
-    # Rule 2: Fix the specific OCR error where '+' is read as '4' in the 'Change' column
+    # --- RULE 2: Fix the specific OCR error where '+' is read as '4' in the 'Change' column ---
     change_val = corrected_data.get('Change', '')
     if change_val.startswith('40.'):
         corrected_data['Change'] = '+' + change_val[1:]
         
-    # Rule 3: Fix the specific OCR error where a leading '+' is read as '4' in the '% Change' column
+    # --- RULE 3: Fix the specific OCR error where a leading '+' is read as '4' in the '% Change' column ---
     pct_change_val = corrected_data.get('% Change', '')
     if pct_change_val and pct_change_val.startswith('4'):
         corrected_data['% Change'] = '+' + pct_change_val[1:]
         
-    # Rule 4: Fix Gamma column based on user rules
+    # --- RULE 4: Fix Gamma column based on user rules ---
     gamma_val = corrected_data.get('Gamma', '')
     if '.' not in gamma_val and gamma_val.startswith('0') and len(gamma_val) > 1:
         corrected_data['Gamma'] = gamma_val[0] + '.' + gamma_val[1:]
 
-    # Rule 5: Fix Delta column based on user rules
+    # --- RULE 5: Fix Delta column based on user rules ---
     delta_val = corrected_data.get('Delta', '')
     if '.' not in delta_val and delta_val.replace('-', '').isdigit():
         sign = ''
@@ -71,7 +71,8 @@ def format_currency_columns(row_data: Dict[str, str]) -> Dict[str, str]:
 def clean_percentage_columns(row_data: Dict[str, str]) -> Dict[str, str]:
     """Removes the '%' symbol from specified percentage columns."""
     cleaned_data = row_data.copy()
-    percentage_columns = ['% Change', 'IV %']
+    # --- REVERTED CHANGE ---
+    percentage_columns = ['% Change', 'Imp Vol']
     for key in percentage_columns:
         if key in cleaned_data:
             cleaned_data[key] = cleaned_data[key].replace('%', '')
@@ -105,7 +106,7 @@ def remove_commas_from_numbers(row_data: Dict[str, str]) -> Dict[str, str]:
 def format_decimal_places(row_data: Dict[str, str]) -> Dict[str, str]:
     """Formats specified columns to a fixed number of decimal places."""
     formatted_data = row_data.copy()
-    two_places_cols = ['Last', 'Change', '% Change', 'Bid', 'Ask', 'IV %']
+    two_places_cols = ['Last', 'Change', '% Change', 'Bid', 'Ask', 'Imp Vol']
     four_places_cols = ['Delta', 'Gamma']
     all_cols_to_format = two_places_cols + four_places_cols
 
@@ -149,11 +150,8 @@ def extract_options_data_from_image(image_path: str, debug: bool = False, engine
         cv2.imwrite(new_image_path, thresh_img)
         print(f"Saved pre-processed image to: {new_image_path}")
 
-        # --- NEW: OCR Engine selection logic ---
         print(f"Using '{engine}' OCR engine...")
         if engine == 'easyocr':
-            # Note: The Reader object is instantiated here. For repeated calls,
-            # it would be more efficient to initialize it only once.
             reader = easyocr.Reader(['en'])
             ocr_result = reader.readtext(thresh_img, detail=0, paragraph=True)
             text_data = '\n'.join(ocr_result)
@@ -179,9 +177,10 @@ def extract_options_data_from_image(image_path: str, debug: bool = False, engine
     current_options_type = None
     current_exp_date = None
 
+    # --- REVERTED CHANGE ---
     full_headers_for_parsing = [
         'Last', 'Change', '% Change', 'Bid', 'Bid Size', 'Ask', 'Ask Size',
-        'Volume', 'Open Int', 'IV %', 'Delta', 'Gamma', 'Action', 'Strike'
+        'Volume', 'Open Int', 'Imp Vol', 'Delta', 'Gamma', 'Action', 'Strike'
     ]
     
     data_pattern = r"([+-]?\d[\d,.]*%?)"
@@ -237,7 +236,7 @@ def extract_options_data_from_image(image_path: str, debug: bool = False, engine
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description="Extract options data from an image file.",
-        formatter_class=argparse.RawTextHelpFormatter # For better help text formatting
+        formatter_class=argparse.RawTextHelpFormatter
     )
     
     parser.add_argument(
@@ -276,3 +275,4 @@ if __name__ == '__main__':
         print(f"\nSuccessfully extracted {len(extracted_data)} data row(s).")
     else:
         print("\nNo data was extracted. Please check the image file and OCR output.")
+
