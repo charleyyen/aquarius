@@ -1,8 +1,7 @@
 #! /usr/bin/python3
 """
 A standalone tool to download audio or video from URLs using yt-dlp.
-This version has been refactored for simplicity, robustness, and modern Python practices.
-It also appends a completion timestamp to the source file after a successful run.
+This version features robust source file parsing and a custom directory directive.
 """
 
 import getopt
@@ -19,7 +18,6 @@ from pathlib import Path
 # --- Configuration ---
 FILEFORMAT = ['mp3', 'mp4']
 DEST_BASE = Path.home() / 'Music' / 'dest'
-#DEST_BASE_VIDEO = Path.home() / 'Videos' / 'youtube'
 
 # yt-dlp command templates
 RIP_AUDIO_CMD = 'yt-dlp -x --audio-quality 0 -f bestaudio --restrict-filenames --audio-format mp3'
@@ -39,10 +37,9 @@ class RipMusic:
         self.file_format = 'mp3'
         self.rip_command = FORMAT_RIP_CMDS['mp3']
         self.srce_file = None
-        # Use pathlib for robust path creation
+        # The final destination directory defaults to a date-stamped directory.
+        # This can be overridden by a 'dir=' directive in the source file.
         self.dest_dir = DEST_BASE / date.today().strftime('%Y_%m_%d')
-        # Create the destination directory if it doesn't exist
-        self.dest_dir.mkdir(parents=True, exist_ok=True)
 
     @staticmethod
     def error_exit(error_message: str):
@@ -96,28 +93,58 @@ class RipMusic:
             self.show_help("The source file (-s) is a required argument.")
 
     def prepare(self) -> dict:
-        """Read the source file and return a dictionary of URLs and destination filenames."""
+        """
+        Reads the source file, checks for a custom 'dir=' directive on the first valid line,
+        sets the destination directory, and returns a dictionary of URLs and filenames.
+        """
         if self.debug:
             print(f"Reading source file: {self.srce_file}")
 
-        url_name_dict = {}
         with open(self.srce_file, "r", encoding="utf8") as f:
-            for line in f:
-                line = line.strip()
-                if not line or line.startswith('#'):
-                    continue
-                parts = line.split()
-                if len(parts) < 2:
-                    continue
-                url = parts[0]
-                base_name = "_".join(parts[1:])
-                # Create the final destination path for the file
-                dest_path = self.dest_dir / f"{base_name}.{self.file_format}"
+            lines = f.readlines()
 
-                if dest_path.exists():
-                    print(f'Skipping, file already exists: {dest_path.name}')
-                    continue
-                url_name_dict[url] = dest_path
+        # Filter out empty lines and comments first.
+        valid_lines = []
+        for line in lines:
+            line = line.strip()
+            if line and not line.startswith('#'):
+                valid_lines.append(line)
+
+        if not valid_lines:
+            return {}
+
+        # --- ENHANCEMENT: Check ONLY the first valid line for the 'dir=' directive ---
+        first_line = valid_lines[0]
+        parts = first_line.split('=', 1)
+
+        # Robustly check for 'dir = value' with spaces and case-insensitivity
+        if len(parts) == 2 and parts[0].strip().lower() == 'dir':
+            custom_dir_name = parts[1].strip()
+            if custom_dir_name: # Ensure the value is not empty
+                self.dest_dir = DEST_BASE / custom_dir_name
+                # Remove the directive line so it's not processed as a URL
+                valid_lines.pop(0)
+        # --- End of Enhancement ---
+
+        # Ensure the final destination directory exists (either custom or default)
+        self.dest_dir.mkdir(parents=True, exist_ok=True)
+
+        url_name_dict = {}
+        for line in valid_lines:
+            # Split by whitespace to get URL and name parts
+            parts = line.split()
+            if len(parts) < 2:
+                continue
+
+            url = parts[0]
+            base_name = "_".join(parts[1:])
+            dest_path = self.dest_dir / f"{base_name}.{self.file_format}"
+
+            if dest_path.exists():
+                print(f'Skipping, file already exists: {dest_path.name}')
+                continue
+            url_name_dict[url] = dest_path
+
         return url_name_dict
 
     def download_and_save(self, url: str, dest_path: Path):
@@ -125,13 +152,12 @@ class RipMusic:
         This is the worker function for the ThreadPool.
         It downloads, converts, and saves a single file.
         """
-        function_name = inspect.currentframe().f_code.co_name
         start_time = time.time()
         print(f"[{dest_path.name}] Starting download...")
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
-            
+
             cmd = self.rip_command + f' -o "{temp_path / "%(title)s.%(ext)s"}" --no-part ' + url
             if self.debug:
                 print(f"[{dest_path.name}] Executing command:\n{cmd}")
@@ -168,16 +194,17 @@ def main():
     obj = RipMusic()
     obj.parse_command_line(sys.argv[1:])
 
-    print(f'Source file: {obj.srce_file}')
+    # 'prepare' now handles all source file parsing and sets the final destination directory
+    url_map = obj.prepare()
+
+    print(f'\nSource file: {obj.srce_file}')
     print(f'Saving to: {obj.dest_dir}')
     print(f'Format: {obj.file_format}')
-
-    url_map = obj.prepare()
 
     if not url_map:
         print("No new files to download.")
         sys.exit(0)
-    
+
     print(f"\nFound {len(url_map)} new files to download...")
 
     pool_size = min(len(url_map), 10)
@@ -192,20 +219,16 @@ def main():
     total_duration = round(time.time() - start_time, 2)
     print(f"\nBatch completed in {total_duration} seconds.")
 
-    # --- ENHANCEMENT: Append a timestamp to the source file ---
-    # This block executes after all downloads are complete.
     try:
         now = datetime.now()
-        # Format: Thursday, September 04, 2025 at 10:28 AM
         timestamp_str = now.strftime("%A, %B %d, %Y at %I:%M %p")
-        log_message = f"\n\n# Above musics are downloaded on {timestamp_str}\n"
+        log_message = f"\n# Above musics are downloaded on {timestamp_str}\n\n"
 
         with open(obj.srce_file, 'a', encoding='utf-8') as f:
             f.write(log_message)
         print(f"Successfully added completion timestamp to {obj.srce_file.name}")
     except Exception as e:
         print(f"Warning: Could not write timestamp to source file. Error: {e}")
-    # --- End of Enhancement ---
 
     sys.exit(0)
 
